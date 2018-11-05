@@ -1,0 +1,40 @@
+{
+  "name": "next-prepare",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "clearing": "rm -rf app common server ",
+    "build": "npx tsc --declaration",
+    "test": "jest"
+  },
+  "author": "Konstantin Bozhkov <enterkostya@mail.ru>",
+  "license": "MIT",
+  "files": [
+    "app",
+    "server",
+    "common"
+  ],
+  "devDependencies": {
+    "@types/body-parser": "^1.17.0",
+    "@types/jest": "^23.3.2",
+    "@types/next": "^6.1.2",
+    "@types/node": "^10.10.3",
+    "@types/react": "^16.4.18",
+    "body-parser": "^1.18.3",
+    "jest": "^23.6.0",
+    "next": "^7.0.2",
+    "react": "^16.6.0",
+    "ts-jest": "^23.10.4",
+    "tslint": "^5.11.0",
+    "tslint-react": "^3.6.0",
+    "typescript": "^3.0.3"
+  },
+  "keywords": [
+    "next-prepare",
+    "next-fetching-data",
+    "next",
+    "nextjs",
+    "Next.js",
+    "react"
+  ]
+}
