@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "clearing": "rm -rf app common server ",
-    "build": "npx tsc --declaration",
-    "test": "jest"
+    "clearing": "rm -rf app common server",
+    "build": "npx tsc --declaration && exit 0",
+    "test": "jest && exit 0"
   },
   "author": "Konstantin Bozhkov <enterkostya@mail.ru>",
   "license": "MIT",
@@ -23,6 +23,7 @@
     "body-parser": "^1.18.3",
     "jest": "^23.6.0",
     "next": "^7.0.2",
+    "pre-commit": "^1.2.2",
     "react": "^16.6.0",
     "ts-jest": "^23.10.4",
     "tslint": "^5.11.0",
@@ -36,5 +37,10 @@
     "nextjs",
     "Next.js",
     "react"
+  ],
+  "pre-commit": [
+    "test",
+    "clearing",
+    "build"
   ]
 }
