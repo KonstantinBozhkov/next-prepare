@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "clearing": "rm -rf app common server ",
-    "build": "npx tsc --declaration",
-    "test": "jest"
+    "clearing": "rm -rf app common server",
+    "build": "npx tsc --declaration && exit 0",
+    "test": "jest && exit 0"
   },
   "author": "Konstantin Bozhkov <enterkostya@mail.ru>",
   "license": "MIT",
@@ -16,18 +16,19 @@
   ],
   "devDependencies": {
     "@types/body-parser": "^1.17.0",
-    "@types/jest": "^23.3.2",
-    "@types/next": "^6.1.2",
-    "@types/node": "^10.10.3",
+    "@types/jest": "^23.3.9",
+    "@types/next": "^7.0.2",
+    "@types/node": "^10.12.2",
     "@types/react": "^16.4.18",
     "body-parser": "^1.18.3",
     "jest": "^23.6.0",
     "next": "^7.0.2",
+    "pre-commit": "^1.2.2",
     "react": "^16.6.0",
     "ts-jest": "^23.10.4",
     "tslint": "^5.11.0",
     "tslint-react": "^3.6.0",
-    "typescript": "^3.0.3"
+    "typescript": "^3.1.6"
   },
   "keywords": [
     "next-prepare",
@@ -36,5 +37,10 @@
     "nextjs",
     "Next.js",
     "react"
+  ],
+  "pre-commit": [
+    "test",
+    "clearing",
+    "build"
   ]
 }

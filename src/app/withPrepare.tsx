@@ -64,8 +64,8 @@ const hoc = ({ store }: IConfiguration) => {
 
 				Object.entries(fetch).forEach(([key, rawAction]) => {
 						const action: Action<any> = getCorrectAction(rawAction, {
-								ctx,
-								pageProps: pagePropsFromGetInitialProps,
+							ctx,
+							pageProps: pagePropsFromGetInitialProps,
 						});
 
 						if (checkValidPrepareValue(pagePropsFromGetInitialProps[key])) {
@@ -78,7 +78,7 @@ const hoc = ({ store }: IConfiguration) => {
 						}
 		
 						if (action.options && action.options.passive) {
-								return;
+							return;
 						}
 
 						needLoad[key] = action;
@@ -86,10 +86,10 @@ const hoc = ({ store }: IConfiguration) => {
 
 				// Set the required updates
 				Object.entries(fetchFresh).forEach(([key, rawAction]) => {
-						needLoad[key] = getCorrectAction(rawAction, {
-								ctx,
-								pageProps: pagePropsFromGetInitialProps,
-						});
+					needLoad[key] = getCorrectAction(rawAction, {
+							ctx,
+							pageProps: pagePropsFromGetInitialProps,
+					});
 				});
 
 				if (Object.keys(needLoad).length > 0) {
@@ -106,10 +106,10 @@ const hoc = ({ store }: IConfiguration) => {
 				}
 
 				return {
-						pageProps: {
-								...fetchResult,
-								...pagePropsFromGetInitialProps,
-						},
+					pageProps: {
+						...fetchResult,
+						...pagePropsFromGetInitialProps,
+					},
 				};
 			}
 
@@ -123,12 +123,12 @@ const hoc = ({ store }: IConfiguration) => {
 				const fetch: Fetch = Object.assign({}, props.Component.fetch, props.Component.fetchFresh);
 
 				const initialResultPrepare = Object.keys(fetch).reduce((acc: object, key) => {
-						if (!props.pageProps[key]) {
-								// log warning
-								return acc;
-						}
+					if (!props.pageProps[key]) {
+							// log warning
+							return acc;
+					}
 
-						return Object.assign(acc, { [key]: props.pageProps[key] });
+					return Object.assign(acc, { [key]: props.pageProps[key] });
 				}, {});
 
 				store.setInitialState(initialResultPrepare);
@@ -141,7 +141,7 @@ const hoc = ({ store }: IConfiguration) => {
 	};
 };
 
-export default (store: CustomStore) => (Component: React.ReactElement<any>) => {
+export default (store: CustomStore) => (Component: React.ComponentType) => {
 	const defaultConfig = {
 		store,
 		async: false,
