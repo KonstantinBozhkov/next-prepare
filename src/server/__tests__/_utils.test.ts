@@ -10,6 +10,7 @@ import {
 	OptionalAction,
 	// ActionWithPayloadMiddleware - it makes no sense to check, since the middleware will be executed on the client side
 } from '../../common/__mocks__/actions';
+import { ActionErrorHandler } from '../../common/interface';
 
 const performAnAction = jest.fn();
 
@@ -51,7 +52,7 @@ describe('server/_utils', () => {
 			});
 
 			// Parallel action will be triggered without accumulation.
-			expect(performAnAction.mock.calls[0]).toEqual([ ParallelAction.action, mockReq ]);
+			expect(performAnAction.mock.calls[0]).toEqual([ ParallelAction.action, mockReq, undefined ]);
 
 			// The result of parallel is transferred to accumulation
 			expect(performAnAction.mock.calls[1]).toEqual([ SimpleAction.action, mockReq, { parallel: parallelResult } ]);
@@ -87,8 +88,8 @@ describe('server/_utils', () => {
 			});
 
 			// Parallel action will be triggered without accumulation.
-			expect(performAnAction.mock.calls[0]).toEqual([ ParallelAction.action, mockReq ]);
-			expect(performAnAction.mock.calls[1]).toEqual([ ParallelAction.action, mockReq ]);
+			expect(performAnAction.mock.calls[0]).toEqual([ ParallelAction.action, mockReq, undefined ]);
+			expect(performAnAction.mock.calls[1]).toEqual([ ParallelAction.action, mockReq, undefined ]);
 
 			// The result of parallel is transferred to accumulation
 			expect(performAnAction.mock.calls[2]).toEqual([
@@ -184,6 +185,66 @@ describe('server/_utils', () => {
 			expect(result).toEqual({
 				simple1: simpleResult1,
 				optional: null,
+				simple2: simpleResult2,
+			});
+		});
+
+		it('Custom error handling actions. Instead, null will return 0', async () => {
+			const simpleResult1 = { d: 0 };
+			const simpleResult2 = { p: 9 };
+
+			const actionErrorHandler = jest.fn().mockReturnValueOnce(0);
+
+			const error = new Error('Any error');
+	
+			performAnAction.mockReturnValueOnce(Promise.resolve(simpleResult1));
+			performAnAction.mockReturnValueOnce(Promise.reject(error));
+			performAnAction.mockReturnValueOnce(Promise.resolve(simpleResult2));
+	
+			const result = await fulfillFetch({
+				req: mockReq,
+				fetch: {
+					simple1: SimpleAction.action,
+					optional: OptionalAction.action,
+					simple2: SimpleAction.action,
+				},
+				performAnAction,
+				actionErrorHandler,
+			});
+	
+			expect(performAnAction.mock.calls[0]).toEqual([
+				SimpleAction.action,
+				mockReq,
+				{},
+			]);
+			expect(performAnAction.mock.calls[1]).toEqual([
+				OptionalAction.action,
+				mockReq,
+				{
+					simple1: simpleResult1,
+				},
+			]);
+			expect(performAnAction.mock.calls[2]).toEqual([
+				SimpleAction.action,
+				mockReq,
+				{
+					simple1: simpleResult1,
+					optional: 0,
+				},
+			]);
+
+			expect(actionErrorHandler).toBeCalledWith(
+				error,
+				OptionalAction.action,
+				mockReq,
+				{
+					simple1: simpleResult1,
+				},
+			);
+
+			expect(result).toEqual({
+				simple1: simpleResult1,
+				optional: 0,
 				simple2: simpleResult2,
 			});
 		});

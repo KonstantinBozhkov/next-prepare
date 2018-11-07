@@ -5,7 +5,7 @@ import { fulfillFetch, validationErrorHandler, catchErrorAndProcess } from './_u
 const performAnAction = handler.process;
 
 export const middleware = (options?: OptionMiddleware) => {
-	const { errorHandler } = options;
+	const { actionErrorHandler, errorHandler } = options;
 	
 	validationErrorHandler(errorHandler);
 
@@ -14,7 +14,7 @@ export const middleware = (options?: OptionMiddleware) => {
 			if (!req.fulfillFetch) {
 				req.fulfillFetch = async ({ fetch }) => {
 					return catchErrorAndProcess(errorHandler, req, res)(async () => {
-						return await fulfillFetch({ req, fetch, performAnAction });
+						return await fulfillFetch({ req, fetch, performAnAction, actionErrorHandler });
 					});
 				};
 			}
@@ -25,7 +25,7 @@ export const middleware = (options?: OptionMiddleware) => {
 		const fetchFromReq: FetchWithProcessedActions = req.body.fetch;
 		
 		catchErrorAndProcess(errorHandler, req, res)(async () => {
-			const result = await fulfillFetch({ req, fetch: fetchFromReq, performAnAction });
+			const result = await fulfillFetch({ req, fetch: fetchFromReq, performAnAction, actionErrorHandler });
 			res.json(result).end();
 		});
 	};

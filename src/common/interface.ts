@@ -72,6 +72,11 @@ export type CustomStore = {
 	getState(): object;
 };
 
+export type ActionErrorHandler = (error: Error, action: Action<any>, req, accumulation?) => void;
+
 export type OptionMiddleware = {
+	actionErrorHandler?: ActionErrorHandler;
 	errorHandler?: (error: Error, req, res) => void;
 };
+
+export type PerformAnAction = (action: Action<any>, req: any, accumulation?: any) => any;

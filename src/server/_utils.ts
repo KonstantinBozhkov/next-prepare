@@ -1,6 +1,6 @@
-import { Action, FetchWithProcessedActions } from '../common/interface';
+import { Action, FetchWithProcessedActions, ActionErrorHandler, PerformAnAction } from '../common/interface';
 
-export const sortFetch = (fetch: FetchWithProcessedActions) => {
+const sortFetch = (fetch: FetchWithProcessedActions) => {
 	const parallel: FetchWithProcessedActions = {};
 	const queue: FetchWithProcessedActions = {};
 
@@ -15,31 +15,42 @@ export const sortFetch = (fetch: FetchWithProcessedActions) => {
 	return { parallel, queue };
 };
 
+const initCallHandler = (req: any, performAnAction: PerformAnAction, actionErrorHandler?: ActionErrorHandler) => {
+	return async (action: Action<any>, accumulation?: any) => {
+		try {
+			return await performAnAction(action, req, accumulation);
+		} catch (error) {
+			if (actionErrorHandler) {
+				return actionErrorHandler(error, action, req, accumulation);
+			}
+
+			if (!action.options || !action.options.optional) {
+				throw error;
+			}
+
+			return null;
+		}
+	};
+};
+
 interface IFulfillFetchProps {
 	req: any;
 	fetch: FetchWithProcessedActions;
-	performAnAction(action: Action<any>, req: any, accumulation?: any): any;
+	performAnAction: PerformAnAction;
+	actionErrorHandler?: ActionErrorHandler;
 }
 
-// TODO: Add logger
-export const fulfillFetch = async ({ req, fetch, performAnAction }: IFulfillFetchProps) => {
+export const fulfillFetch = async ({ req, fetch, performAnAction, actionErrorHandler }: IFulfillFetchProps) => {
 	const { parallel, queue } = sortFetch(fetch);
 
 	const accumulation = {};
 
+	const callHandler = initCallHandler(req, performAnAction, actionErrorHandler);
+
 	// parallel
 	await Promise.all(
 		Object.entries(parallel).map( async ([key, action]) => {
-			try {
-				accumulation[key] = await performAnAction(action, req);
-			} catch (error) {
-				if (!action.options || !action.options.optional) {
-					throw error;
-				}
-				
-				accumulation[key] = null;
-				// log
-			}
+			accumulation[key] = await callHandler(action);
 		}),
 	);
 
@@ -48,14 +59,8 @@ export const fulfillFetch = async ({ req, fetch, performAnAction }: IFulfillFetc
 		const acc = await accPromise;
 		let result = null;
 
-		try {
-			result = await performAnAction(action, req, acc);
-		} catch (error) {
-			if (!action.options || !action.options.optional) {
-				throw error;
-			}
-			// log
-		}
+		result = await callHandler(action, acc);
+
 		return { ...acc, [key]: result };
 	}, Promise.resolve(accumulation));
 };
