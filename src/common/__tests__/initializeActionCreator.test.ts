@@ -3,7 +3,7 @@ import { PayloadMiddleware, ActionOptions } from '../interface';
 
 describe('initializeActionCreator', () => {
 	describe('Without options', () => {
-		it('Payload is number', () => {
+		it('Payload is boolean', () => {
 			const type = 'type';
 			const payload = true;
 	
@@ -58,17 +58,6 @@ describe('initializeActionCreator', () => {
 			expect(actionForFetch).toEqual({ type, payload });
 		});
 
-		it('Payload is array', () => {
-			const type = 'type';
-			const payload = [ 'foo', 'bar' ];
-	
-			const action = initializeActionCreator<string[]>(type);
-			expect(action.type).toBe(type);
-	
-			const actionForFetch = action(payload);
-			expect(actionForFetch).toEqual({ type, payload });
-		});
-
 		// I think it makes no sense to check all types for wrapped payload
 		it('Payload wrapped in middleware', () => {
 			const type = 'type';
@@ -92,10 +81,14 @@ describe('initializeActionCreator', () => {
 			};
 			const options2: ActionOptions = {
 				passive: true,
-			};
+			};	
 			const options3: ActionOptions = {
+				optional: true,
+			};
+			const options4: ActionOptions = {
 				parallel: true,
 				passive: true,
+				optional: true,
 			};
 	
 			const action = initializeActionCreator<string[]>(type);
@@ -109,6 +102,9 @@ describe('initializeActionCreator', () => {
 
 			const actionForFetch3 = action(payload, options3);
 			expect(actionForFetch3).toEqual({ type, payload, options: options3 });
+
+			const actionForFetch4 = action(payload, options4);
+			expect(actionForFetch4).toEqual({ type, payload, options: options4 });
 		});
 
 		// I think it makes no sense to check all types for wrapped payload
@@ -123,8 +119,12 @@ describe('initializeActionCreator', () => {
 				passive: true,
 			};
 			const options3: ActionOptions = {
+				optional: true,
+			};
+			const options4: ActionOptions = {
 				parallel: true,
 				passive: true,
+				optional: true,
 			};
 
 			const action = initializeActionCreator<string>(type);
@@ -138,6 +138,9 @@ describe('initializeActionCreator', () => {
 
 			const actionForFetch3 = action(payload, options3);
 			expect(actionForFetch3).toEqual({ type, payload, options: options3 });
+
+			const actionForFetch4 = action(payload, options3);
+			expect(actionForFetch4).toEqual({ type, payload, options: options3 });
 		});
 	});
 

@@ -16,10 +16,12 @@ export const getCorrectAction = (
 		? {
 			parallel: !!rawAction.options.parallel, // coercion to the boolean value
 			passive: !!rawAction.options.passive, // coercion to the boolean value
+			optional: !!rawAction.options.optional, // coercion to the boolean value
 		}
 		: {
 			parallel: false,
 			passive: false,
+			optional: false,
 		};
 
 	// Payload - function middleware

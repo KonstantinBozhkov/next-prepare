@@ -11,7 +11,7 @@ export namespace SimpleAction {
 	export const actionFields: Action<number> = {
 		type: 'SimpleAction',
 		payload,
-		options: { parallel: false, passive: false },
+		options: { parallel: false, passive: false, optional: false },
 	};
 }
 
@@ -25,7 +25,7 @@ export namespace ParallelAction {
 	export const actionFields: Action<string[]> = {
 		type: 'ParallelAction',
 		payload,
-		options: { parallel: true, passive: false },
+		options: { parallel: true, passive: false, optional: false },
 	};
 }
 
@@ -47,7 +47,27 @@ export namespace PassiveAction {
 	export const actionFields: Action<IPayload> = {
 		type: 'PassiveAction',
 		payload,
-		options: { parallel: false, passive: true },
+		options: { parallel: false, passive: true, optional: false },
+	};
+}
+
+export namespace OptionalAction {
+	interface IPayload {
+		nickname: string;
+	}
+
+	export const payload: IPayload = {
+		nickname: 'Noob',
+	};
+
+	export const actionCreator = initializeActionCreator<IPayload>('OptionalAction');
+	export const actionCreatorFields = { type: 'OptionalAction', payload: null };
+
+	export const action = actionCreator(payload, { optional: true });
+	export const actionFields: Action<IPayload> = {
+		type: 'OptionalAction',
+		payload,
+		options: { parallel: false, passive: false, optional: false },
 	};
 }
 
@@ -73,6 +93,6 @@ export namespace ActionWithPayloadMiddleware {
 	export const actionFields: Action<IPayloadMiddlewareResult> = {
 		type: 'ActionWithPayloadMiddleware',
 		payload: payloadMiddlewareResult,
-		options: { parallel: false, passive: false },
+		options: { parallel: false, passive: false, optional: false },
 	};
 }

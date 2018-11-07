@@ -15,63 +15,49 @@ export const sortFetch = (fetch: FetchWithProcessedActions) => {
 	return { parallel, queue };
 };
 
-// Fulfill Parallel
-
-type FulfillParallelFetchProps = {
-	req: any;
-	fetch: FetchWithProcessedActions;
-	performAnAction(action: Action<any>, req: any, accumulation?: any): any;
-};
-
-type FulfillParallelFetch = (props: FulfillParallelFetchProps) => Promise<object>;
-
-export const fulfillParallelFetch: FulfillParallelFetch = async ({ req, fetch, performAnAction }) => {
-	const resiltParallel = {};
-
-	// starting parallel concessions
-	await Promise.all(Object.entries(fetch).map( async ([key, action]) => {
-		resiltParallel[key] = await performAnAction(action, req);
-	}));
-
-	return resiltParallel;
-};
-
-// Fulfill Queue
-interface IFulfillQueuePreparesProps {
-	req: any;
-	fetch: FetchWithProcessedActions;
-	accumulation: object;
-	performAnAction(action: Action<any>, req: any, accumulation?: any): any;
-}
-
-type FulfillQueuePrepares = (props: IFulfillQueuePreparesProps) => Promise<object>;
-
-export const fulfillQueuePrepares: FulfillQueuePrepares = async ({ req, fetch, accumulation, performAnAction }) => {
-	return await Object.entries(fetch).reduce(async (accPromise: object, [ key, action ]) => {
-		const acc = await accPromise;
-
-		acc[key] = await performAnAction(action, req, acc);
-
-		return acc;
-	}, Promise.resolve(accumulation));
-};
-
-// Fulfill all
-
 interface IFulfillFetchProps {
 	req: any;
 	fetch: FetchWithProcessedActions;
 	performAnAction(action: Action<any>, req: any, accumulation?: any): any;
 }
 
-type FulfillFetch = (props: IFulfillFetchProps) => Promise<object>;
-
-/* Startpoint */
-export const fulfillFetch: FulfillFetch = async ({ req, fetch, performAnAction }) => {
+// TODO: Add logger
+export const fulfillFetch = async ({ req, fetch, performAnAction }: IFulfillFetchProps) => {
 	const { parallel, queue } = sortFetch(fetch);
 
-	const parallelResult = await fulfillParallelFetch({ req, fetch: parallel, performAnAction });
-	return await fulfillQueuePrepares({ req, fetch: queue, accumulation: parallelResult, performAnAction });
+	const accumulation = {};
+
+	// parallel
+	await Promise.all(
+		Object.entries(parallel).map( async ([key, action]) => {
+			try {
+				accumulation[key] = await performAnAction(action, req);
+			} catch (error) {
+				if (!action.options || !action.options.optional) {
+					throw error;
+				}
+				
+				accumulation[key] = null;
+				// log
+			}
+		}),
+	);
+
+	// queue
+	return await Object.entries(queue).reduce(async (accPromise: object, [ key, action ]) => {
+		const acc = await accPromise;
+		let result = null;
+
+		try {
+			result = await performAnAction(action, req, acc);
+		} catch (error) {
+			if (!action.options || !action.options.optional) {
+				throw error;
+			}
+			// log
+		}
+		return { ...acc, [key]: result };
+	}, Promise.resolve(accumulation));
 };
 /* 
 export const getHandlers = (pathToHandlers: string): HandlerFunction[] => {

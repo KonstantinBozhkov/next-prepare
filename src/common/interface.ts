@@ -11,7 +11,7 @@ export type Ctx = {
 export type ActionOptions = {
 	parallel?: boolean;
 	passive?: boolean;
-	// dispensable?: boolean;
+	optional?: boolean;
 };
 
 export type RawPayload<P> = P|PayloadMiddleware<P>;
