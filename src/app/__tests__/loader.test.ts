@@ -1,5 +1,5 @@
 import * as loader from '../loader';
-import { FetchWithProcessedActions } from '../../common/interface';
+import { FetchСontainingProcessedActions } from '../../common/interface';
 
 import { ctx } from '../__mocks__/constants';
 import {
@@ -10,7 +10,7 @@ import {
 
 jest.unmock('../loader');
 
-const fetch: FetchWithProcessedActions = {
+const fetch: FetchСontainingProcessedActions = {
 	simple: SimpleAction.action,
 	parallel: ParallelAction.action,
 	passive: PassiveAction.action,
@@ -26,7 +26,7 @@ describe('Test loader', () => {
 			const result = await loader.get({ fetch, ctx: ctx.serverSide });
 
 			expect(result).toBe(response);
-			expect(ctx.serverSide.req.fulfillFetch).toBeCalledWith({ fetch });
+			expect(ctx.serverSide.req.fulfillFetch).toBeCalledWith(fetch);
 		});
 
 		it('Client side', async () => {

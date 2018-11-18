@@ -1,10 +1,14 @@
-import initializeActionCreator from '../initializeActionCreator';
-import { Action, PayloadMiddleware } from '../interface';
+import {
+	actionCreator as createActionCreator,
+	actionCreatorForHttp,
+	actionCreatorForExpress,
+} from '../action';
+import { Action, PayloadMiddleware, HttpReq, ExpressReq } from '../interface';
 
 export namespace SimpleAction {
 	export const payload = 545;
 
-	export const actionCreator = initializeActionCreator<number>('SimpleAction');
+	export const actionCreator = createActionCreator<number, any, HttpReq>('SimpleAction');
 	export const actionCreatorFields = { type: 'SimpleAction', payload: null };
 
 	export const action = actionCreator(payload);
@@ -18,7 +22,7 @@ export namespace SimpleAction {
 export namespace ParallelAction {
 	export const payload = ['a', 'b', 'c'];
 
-	export const actionCreator = initializeActionCreator<string[]>('ParallelAction');
+	export const actionCreator = actionCreatorForHttp<string[], string>('ParallelAction');
 	export const actionCreatorFields = { type: 'ParallelAction', payload: null };
 
 	export const action = actionCreator(payload, { parallel: true });
@@ -40,7 +44,7 @@ export namespace PassiveAction {
 		lastName: 'Jonas',
 	};
 
-	export const actionCreator = initializeActionCreator<IPayload>('PassiveAction');
+	export const actionCreator = actionCreatorForExpress<IPayload, number>('PassiveAction');
 	export const actionCreatorFields = { type: 'PassiveAction', payload: null };
 
 	export const action = actionCreator(payload, { passive: true });
@@ -60,7 +64,7 @@ export namespace OptionalAction {
 		nickname: 'Noob',
 	};
 
-	export const actionCreator = initializeActionCreator<IPayload>('OptionalAction');
+	export const actionCreator = actionCreatorForExpress<IPayload, string>('OptionalAction');
 	export const actionCreatorFields = { type: 'OptionalAction', payload: null };
 
 	export const action = actionCreator(payload, { optional: true });
@@ -80,13 +84,13 @@ export namespace ActionWithPayloadMiddleware {
 		title: 'Foo',
 	};
 
-	export const middleware: PayloadMiddleware<IPayloadMiddlewareResult> = () => {
+	export const middleware: PayloadMiddleware<IPayloadMiddlewareResult, ExpressReq> = () => {
 		return payloadMiddlewareResult;
 	};
 
 	export const payloadMiddleware = jest.fn(middleware);
 
-	export const actionCreator = initializeActionCreator<IPayloadMiddlewareResult>('ActionWithPayloadMiddleware');
+	export const actionCreator = actionCreatorForExpress<IPayloadMiddlewareResult, object>('ActionWithPayloadMiddleware');
 	export const actionCreatorFields = { type: 'ActionWithPayloadMiddleware', payload: null };
 
 	export const action = actionCreator(payloadMiddleware);

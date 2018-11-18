@@ -1,24 +1,55 @@
+import { NextAppContext } from 'next/app';
+import { NextContext } from 'next';
+import { Request } from 'express';
 
-export type Ctx = {
-	err?: any;
-	req?: any;
-	res?: any;
-	pathname: string;
-	query: any;
-	asPath: string;
+/* MAIN */
+// [NextContext]
+export type NextPrepareContext<Req> = NextContext & {
+	req?: Req,
 };
 
+// [NextAppContext]
+export type NextPrepareAppContext<Req> = NextAppContext & {
+	Component: PageComponent;
+	ctx: NextPrepareContext<Req>;
+};
+
+export type Fetch<Req = HttpReq> = {
+	[key: string]: ActionCreator<any, any, Req> | RawAction<any, Req>;
+};
+
+export type FetchСontainingProcessedActions = {
+	[key: string]: Action<any>;
+};
+
+export type PageComponent = React.ComponentType & {
+	fetch?: Fetch;
+	fetchFresh?: Fetch;
+};
+
+type RequestFields<B> = {
+	fulfillFetch: FulfillFetchInReq;
+	body?: B;
+};
+
+export type ExpressReq<B = any> = Request & RequestFields<B> & {
+	body: B;
+};
+
+export type HttpReq<B = any> = NextContext['req'] & RequestFields<B>;
+
+/* ACTION */
 export type ActionOptions = {
 	parallel?: boolean;
 	passive?: boolean;
 	optional?: boolean;
 };
 
-export type RawPayload<P> = P|PayloadMiddleware<P>;
+export type RawPayload<P, Req> = P | PayloadMiddleware<P, Req>;
 
-export type RawAction<P> = {
+export type RawAction<P, Req> = {
 	type: string;
-	payload: RawPayload<P>;
+	payload: RawPayload<P, Req>;
 	options?: ActionOptions;
 };
 
@@ -28,13 +59,21 @@ export type Action<P> = {
 	options?: ActionOptions;
 };
 
-export type ActionCreator<P, R> = {
+export type ActionCreator<P, R, Req> = {
 	type: string;
 	result: R;
 	options?: ActionOptions;
-	(payload: RawPayload<P>, options?: ActionOptions): RawAction<P>;
+	(payload: RawPayload<P, Req>, options?: ActionOptions): RawAction<P, Req>;
 };
 
+export type PayloadMiddlewareArguments<Req> = {
+	pageProps: any,
+	ctx: NextPrepareContext<Req>;
+};
+
+export type PayloadMiddleware<P, Req> = (props: PayloadMiddlewareArguments<Req>) => P;
+
+/* HANDLER */
 export type HandlerFunctionProps<P> = {
 	req: any;
 	action: Action<P>;
@@ -43,34 +82,8 @@ export type HandlerFunctionProps<P> = {
 
 export type HandlerFunction<P, R> = (props: HandlerFunctionProps<P>) => R|Promise<R>;
 
-export type PayloadMiddlewareArguments = {
-	pageProps: any,
-	ctx: Ctx;
-};
-
-export type PayloadMiddleware<P> = (props: PayloadMiddlewareArguments) => P;
-
-export type Fetch = {
-	[key: string]: ActionCreator<any, any>|RawAction<any>;
-};
-
-export type FetchWithProcessedActions = {
-	[key: string]: Action<any>;
-};
-
-export type WithPrepareConstructorProps = {
-	Component: any;
-	pageProps: {
-		[key: string]: any;
-	};
-	err: any;
-};
-
-export type CustomStore = {
-	setInitialState(state: object): CustomStore;
-	setResult(props: object): CustomStore;
-	getState(): object;
-};
+/* MIDDLEWARES */
+export type FulfillFetchInReq = <Req>(fetch: FetchСontainingProcessedActions) => Promise<any>;
 
 export type ActionErrorHandler = (error: Error, action: Action<any>, req, accumulation?) => void;
 
@@ -80,3 +93,13 @@ export type OptionMiddleware = {
 };
 
 export type PerformAnAction = (action: Action<any>, req: any, accumulation?: any) => any;
+
+/* STORE */
+export type CustomStore = {
+	unsubscribe<S = any>(f: (state: S) => void): CustomStore;
+	subscribe<S = any>(f: (state: S) => void): CustomStore;
+	setInitialState<S = any>(state: S): CustomStore;
+	setResult(props: object): CustomStore;
+	getState(): object;
+	needToSubscribe?: boolean;
+};

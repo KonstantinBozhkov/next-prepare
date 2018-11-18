@@ -1,12 +1,20 @@
 import * as React from 'react';
+import { mount } from 'enzyme';
 
 import loader from '../loader';
 import withPrepare from '../withPrepare';
 import { getCorrectAction } from '../_utils';
-import { CustomStore, Ctx, Fetch, PayloadMiddlewareArguments, FetchWithProcessedActions } from '../../common/interface';
+import {
+	CustomStore,
+	HttpReq,
+	Fetch,
+	NextPrepareContext,
+	PayloadMiddlewareArguments,
+	FetchСontainingProcessedActions,
+} from '../../common/interface';
 
 import App from '../__mocks__/pages/_app';
-import { ctx } from '../__mocks__/constants';
+import { ctx, mockRouter } from '../__mocks__/constants';
 
 // Pages
 import { EmptyPage } from '../__mocks__/pages/Empty';
@@ -20,21 +28,25 @@ import { PageWithGetInitialPropsAndFetchAndFetchFresh } from '../__mocks__/pages
 jest.mock('../loader');
 
 const mockStore: CustomStore = {
+	subscribe: jest.fn(),
+	unsubscribe: jest.fn(),
 	setInitialState: jest.fn(),
 	getState: jest.fn().mockRejectedValue({}),
 	setResult: jest.fn(),
 };
 
+type InitGetPageProps = (Wrapped) =>
+	<Req>(Component: React.ComponentType, context: NextPrepareContext<Req>) => Promise<any>;
 // tslint:disable-next-line:max-line-length
-const initGetPageProps = WrappedApp => async (Component: React.ComponentClass, context: Ctx) => (await WrappedApp.getInitialProps({ Component, ctx: context })).pageProps;
+const initGetPageProps: InitGetPageProps = Wrapped => async (Component, context) => (await Wrapped.getInitialProps({ Component, ctx: context })).pageProps;
 
-const getCorrectFetch = (fetch: Fetch, props: PayloadMiddlewareArguments) => {
+const getCorrectFetch = (fetch: Fetch, props: PayloadMiddlewareArguments<HttpReq>) => {
 	return Object.keys(fetch).reduce((acc, key) => {
 		return { ...acc, [key]: getCorrectAction(fetch[key], props) };
 	}, {});
 };
 
-const filterPassive = (fetch: FetchWithProcessedActions) => {
+const filterPassive = (fetch: FetchСontainingProcessedActions) => {
 	return Object.keys(fetch).reduce((acc, key) => {
 		if (fetch[key].options && fetch[key].options.passive) {
 			return acc;
@@ -43,66 +55,151 @@ const filterPassive = (fetch: FetchWithProcessedActions) => {
 	}, {});
 };
 
-describe('Test withPrepare', () => {
-	const WrappedApp = withPrepare(mockStore)((App as any));
-	const getPageProps = initGetPageProps(WrappedApp);
+const WrappedApp = withPrepare(mockStore)(App);
+const getPageProps = initGetPageProps(WrappedApp);
 
-	describe('Check result page properties with fetch', () => {
+// EmptyPage
+describe('Check result page properties without getInitialProps and fetch', () => {
+	beforeEach(jest.resetAllMocks);
+	const { Component } = EmptyPage;
+
+	describe('Getting page props', () => {
 		beforeEach(jest.resetAllMocks);
-		const { Component, fetchResult } = PageWithFetch;
 
-		it('Constructor', () => {
-			const result = new WrappedApp({
-				Component,
-				pageProps: { ...fetchResult },
-				err: null,
+		describe('Client side', () => {
+			it('getState will be called and setResult will not', async () => {
+				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
+	
+				expect(pagePropsResult).toEqual({});
+				expect(mockStore.getState).toBeCalled();
+				expect(loader.get).not.toBeCalled();
+				expect(mockStore.setResult).not.toBeCalled();
 			});
-
-			expect(result).toBeInstanceOf(WrappedApp);
-			expect(mockStore.setInitialState).toBeCalledWith(fetchResult);
 		});
+	
+		describe('Server side', () => {
+			it('getState and setResult will not be called', async () => {
+				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
+	
+				expect(pagePropsResult).toEqual({});
+				expect(mockStore.getState).not.toBeCalled();
+				expect(loader.get).not.toBeCalled();
+				expect(mockStore.setResult).not.toBeCalled();
+			});
+		});
+	});
 
+	describe('Lifecycle', () => {
+		it('Mount', () => {
+			const wrapper = mount(
+				<WrappedApp
+					Component={ Component }
+					router={ mockRouter }
+					pageProps={ {} }
+				/>,
+			);
+
+			expect(mockStore.setInitialState).toBeCalledWith({});
+			expect(wrapper).toMatchSnapshot();
+		});
+	});
+});
+
+// PageWithGetInitialProps
+describe('Check result page properties with getInitialProps', () => {
+	beforeEach(jest.resetAllMocks);
+	const { Component, getInitialPropsResult } = PageWithGetInitialProps;
+
+	describe('Getting page props', () => {
+		describe('Client side', () => {
+			// tslint:disable-next-line:max-line-length
+			it('getState will be called and setResult will not, because the result of getInitialProps is not stored in the state', async () => {
+				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
+	
+				expect(pagePropsResult).toEqual(getInitialPropsResult);
+				expect(mockStore.getState).toBeCalled();
+				expect(loader.get).not.toBeCalled();
+				expect(mockStore.setResult).not.toBeCalled();
+			});
+		});
+	
+		describe('Server side', () => {
+			it('getState and setResult will not be called', async () => {
+				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
+	
+				expect(pagePropsResult).toEqual(getInitialPropsResult);
+				expect(mockStore.getState).not.toBeCalled();
+				expect(loader.get).not.toBeCalled();
+				expect(mockStore.setResult).not.toBeCalled();
+			});
+		});
+	});
+
+	describe('Lifecycle', () => {
+		it('Mount', () => {
+			const wrapper = mount(
+				<WrappedApp
+					Component={ Component }
+					router={ mockRouter }
+					pageProps={ getInitialPropsResult }
+				/>,
+			);
+			const page = wrapper.find(Component);
+
+			expect(mockStore.setInitialState).toBeCalledWith({});
+			expect(page.props()).toEqual(getInitialPropsResult);
+			expect(wrapper).toMatchSnapshot();
+		});
+	});
+});
+
+// PageWithFetch
+describe('Check result page properties with fetch', () => {
+	beforeEach(jest.resetAllMocks);
+	const { Component, fetchResult } = PageWithFetch;
+
+	describe('Getting page props', () => {
 		describe('Client side', async () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetch). The result of his called will be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
 			});
-
+	
 			it('Having the result of fetch in the store does not occur to the loader', async () => {
 				(mockStore.getState as any).mockReturnValueOnce(fetchResult);
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).not.toBeCalled();
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
 			});
 		});
-
+	
 		describe('Server side', async () => {
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetch). The result of his called will NOT be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchResult });
 				expect(mockStore.getState).not.toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
@@ -111,139 +208,71 @@ describe('Test withPrepare', () => {
 		});
 	});
 
-	describe('Check result page properties without getInitialProps and fetch', () => {
-		beforeEach(jest.resetAllMocks);
-		const { Component } = EmptyPage;
+	describe('Lifecycle', () => {
+		it('Mount', () => {
+			const wrapper = mount(
+				<WrappedApp
+					Component={ Component }
+					router={ mockRouter }
+					pageProps={ fetchResult }
+				/>,
+			);
+			const page = wrapper.find(Component);
 
-		it('Constructor', () => {
-			const result = new WrappedApp({
-				Component,
-				pageProps: {},
-				err: null,
-			});
-
-			expect(result).toBeInstanceOf(WrappedApp);
-			expect(mockStore.setInitialState).toBeCalledWith({});
-		});
-
-		describe('Client side', () => {
-			it('getState will be called and setResult will not', async () => {
-				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
-
-				expect(pagePropsResult).toEqual({});
-				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).not.toBeCalled();
-				expect(mockStore.setResult).not.toBeCalled();
-			});
-		});
-
-		describe('Server side', () => {
-			it('getState and setResult will not be called', async () => {
-				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
-
-				expect(pagePropsResult).toEqual({});
-				expect(mockStore.getState).not.toBeCalled();
-				expect(loader.get).not.toBeCalled();
-				expect(mockStore.setResult).not.toBeCalled();
-			});
-		});
-	});
-
-	describe('Check result page properties with getInitialProps', () => {
-		beforeEach(jest.resetAllMocks);
-		const { Component, getInitialPropsResult } = PageWithGetInitialProps;
-
-		it('Constructor', () => {
-			const result = new WrappedApp({
-				Component,
-				pageProps: { ...getInitialPropsResult },
-				err: null,
-			});
-
-			expect(result).toBeInstanceOf(WrappedApp); 
-			expect(mockStore.setInitialState).toBeCalledWith({});
-		});
-
-		describe('Client side', () => {
-			// tslint:disable-next-line:max-line-length
-			it('getState will be called and setResult will not, because the result of getInitialProps is not stored in the state', async () => {
-				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
-
-				expect(pagePropsResult).toEqual(getInitialPropsResult);
-				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).not.toBeCalled();
-				expect(mockStore.setResult).not.toBeCalled();
-			});
-		});
-
-		describe('Server side', () => {
-			it('getState and setResult will not be called', async () => {
-				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
-
-				expect(pagePropsResult).toEqual(getInitialPropsResult);
-				expect(mockStore.getState).not.toBeCalled();
-				expect(loader.get).not.toBeCalled();
-				expect(mockStore.setResult).not.toBeCalled();
-			});
-		});
-	});
-
-	describe('Check result page properties with getInitialProps and fetch', () => {
-		beforeEach(jest.resetAllMocks);
-		const { Component, fetchResult, getInitialPropsResult } = PageWithGetInitialPropsAndFetch;
-
-		it('Constructor', () => {
-			const result = new WrappedApp({
-				Component,
-				pageProps: { ...fetchResult, ...getInitialPropsResult },
-				err: null,
-			});
-
-			expect(result).toBeInstanceOf(WrappedApp);
 			expect(mockStore.setInitialState).toBeCalledWith(fetchResult);
+			expect(page.props()).toEqual(fetchResult);
+			expect(wrapper).toMatchSnapshot();
 		});
+	});
+});
 
+// PageWithGetInitialPropsAndFetch
+describe('Check result page properties with getInitialProps and fetch', () => {
+	beforeEach(jest.resetAllMocks);
+	const { Component, fetchResult, getInitialPropsResult } = PageWithGetInitialPropsAndFetch;
+
+	describe('Getting page props', () => {
 		describe('Client side', () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetch). The result of his called will be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce(fetchResult);
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch});
 			});
-
+	
 			it('Having the result of preparation in the store does not occur to the loader', async () => {
 				(mockStore.getState as any).mockReturnValueOnce(fetchResult);
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
-
+	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).not.toBeCalled();
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
 			});
 		});
-
+	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetch) array. The result of his called will NOT be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce(fetchResult);
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult });
 				expect(mockStore.getState).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
@@ -252,67 +281,76 @@ describe('Test withPrepare', () => {
 		});
 	});
 
-	describe('Check result page properties with fetchFresh', () => {
-		beforeEach(jest.resetAllMocks);
-		const { Component, fetchFreshResult } = PageWithFetchFresh;
+	describe('Lifecycle', () => {
+		it('Mount', () => {
+			const wrapper = mount(
+				<WrappedApp
+					Component={ Component }
+					router={ mockRouter }
+					pageProps={ { ...fetchResult, ...getInitialPropsResult } }
+				/>,
+			);
+			const page = wrapper.find(Component);
 
-		it('Constructor', () => {
-			const result = new WrappedApp({
-				Component,
-				pageProps: { ...fetchFreshResult },
-				err: null,
-			});
-
-			expect(result).toBeInstanceOf(WrappedApp);
-			expect(mockStore.setInitialState).toBeCalledWith(fetchFreshResult);
+			expect(mockStore.setInitialState).toBeCalledWith(fetchResult);
+			expect(page.props()).toEqual({ ...fetchResult, ...getInitialPropsResult });
+			expect(wrapper).toMatchSnapshot();
 		});
+	});
+});
 
+// PageWithFetchFresh
+describe('Check result page properties with fetchFresh', () => {
+	beforeEach(jest.resetAllMocks);
+	const { Component, fetchFreshResult } = PageWithFetchFresh;
+
+	describe('Getting page props', () => {
 		describe('Client side', () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetchFresh) array. The result of his called will be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchFreshResult });
 			});
-
+	
 			it('The result from the store will be ignored and a request for a new result will be made', async () => {
 				(mockStore.getState as any).mockReturnValueOnce({ ...fetchFreshResult });
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchFreshResult });
 			});
 		});
-
+	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetchFresh) array. The result of his called will NOT be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchFreshResult });
 				expect(mockStore.getState).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
@@ -321,33 +359,42 @@ describe('Test withPrepare', () => {
 		});
 	});
 
-	describe('Check result page properties with fetch and fetchFresh', () => {
-		beforeEach(jest.resetAllMocks);
-		const { Component, fetchResult, fetchFreshResult } = PageWithFetchAndFetchFresh;
+	describe('Lifecycle', () => {
+		it('Mount', () => {
+			const wrapper = mount(
+				<WrappedApp
+					Component={ Component }
+					router={ mockRouter }
+					pageProps={ fetchFreshResult }
+				/>,
+			);
+			const page = wrapper.find(Component);
 
-		it('Constructor', () => {
-			const result = new WrappedApp({
-				Component,
-				pageProps: { ...fetchResult, ...fetchFreshResult },
-				err: null,
-			});
-
-			expect(result).toBeInstanceOf(WrappedApp);
-			expect(mockStore.setInitialState).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
+			expect(mockStore.setInitialState).toBeCalledWith(fetchFreshResult);
+			expect(page.props()).toEqual(fetchFreshResult);
+			expect(wrapper).toMatchSnapshot();
 		});
+	});
+});
 
+// PageWithFetchAndFetchFresh
+describe('Check result page properties with fetch and fetchFresh', () => {
+	beforeEach(jest.resetAllMocks);
+	const { Component, fetchResult, fetchFreshResult } = PageWithFetchAndFetchFresh;
+
+	describe('Getting page props', () => {
 		describe('Client side', () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetch and fetchFresh) array. The result of his called will be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch({ ...Component.fetch, ...Component.fetchFresh }, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
@@ -357,31 +404,31 @@ describe('Test withPrepare', () => {
 			it('A request will be made to get a new result on prepareFresh. And the result of prepare will be taken from the store', async () => {
 				(mockStore.getState as any).mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
 				loader.get = jest.fn().mockReturnValueOnce(fetchFreshResult);
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
 			});
 		});
-
+	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (prepareFresh and prepareFresh) array. The result of his called will NOT be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch({ ...Component.fetch, ...Component.fetchFresh }, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).not.toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
@@ -390,33 +437,42 @@ describe('Test withPrepare', () => {
 		});
 	});
 
-	describe('Check result page properties with getInitialProps, fetch and fetchFresh', () => {
-		beforeEach(jest.resetAllMocks);
-		const {
-			Component,
-			getInitialPropsResult,
-			fetchResult,
-			fetchFreshResult,
-			fetchResultWithoutPassive,
-		} = PageWithGetInitialPropsAndFetchAndFetchFresh;
+	describe('Lifecycle', () => {
+		it('Mount', () => {
+			const wrapper = mount(
+				<WrappedApp
+					Component={ Component }
+					router={ mockRouter }
+					pageProps={{ ...fetchResult, ...fetchFreshResult }}
+				/>,
+			);
+			const page = wrapper.find(Component);
 
-		it('Constructor', () => {
-			const result = new WrappedApp({
-				Component,
-				pageProps: { ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult },
-				err: null,
-			});
-
-			expect(result).toBeInstanceOf(WrappedApp);
 			expect(mockStore.setInitialState).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
+			expect(page.props()).toEqual({ ...fetchResult, ...fetchFreshResult });
+			expect(wrapper).toMatchSnapshot();
 		});
+	});
+});
 
+// PageWithGetInitialPropsAndFetchAndFetchFresh
+describe('Check result page properties with getInitialProps, fetch and fetchFresh', () => {
+	beforeEach(jest.resetAllMocks);
+	const {
+		Component,
+		getInitialPropsResult,
+		fetchResult,
+		fetchFreshResult,
+		fetchResultWithoutPassive,
+	} = PageWithGetInitialPropsAndFetchAndFetchFresh;
+
+	describe('Getting page props', () => {
 		describe('Client side', () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetch and fetchFresh). The result of his called will be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				// This page contains a passive action
 				const correctFetch = filterPassive(
@@ -425,7 +481,7 @@ describe('Test withPrepare', () => {
 						pageProps: {},
 					}),
 				);
-
+	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
@@ -435,25 +491,25 @@ describe('Test withPrepare', () => {
 			it('A request will be made to get a new result on fetchFresh. And the result is fetched taken from the store, and the result is added from getInitialProps', async () => {
 				(mockStore.getState as any).mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
 				loader.get = jest.fn().mockReturnValueOnce(fetchFreshResult);
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch({ ...Component.fetchFresh }, {
 					ctx: ctx.clientSide,
 					pageProps: {},
 				});
-
+	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
 			});
 		});
-
+	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (prepare & prepareFresh) array. The result of his called will NOT be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
-
+	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				// This page contains a passive action
 				const correctFetch = filterPassive(
@@ -462,12 +518,29 @@ describe('Test withPrepare', () => {
 						pageProps: {},
 					}),
 				);
-
+	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).not.toBeCalled();
 				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
 				expect(mockStore.setResult).not.toBeCalled();
 			});
+		});
+	});
+
+	describe('Lifecycle', () => {
+		it('Mount', () => {
+			const wrapper = mount(
+				<WrappedApp
+					Component={ Component }
+					router={ mockRouter }
+					pageProps={{ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult }}
+				/>,
+			);
+			const page = wrapper.find(Component);
+
+			expect(mockStore.setInitialState).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
+			expect(page.props()).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
+			expect(wrapper).toMatchSnapshot();
 		});
 	});
 });

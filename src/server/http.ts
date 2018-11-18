@@ -1,33 +1,42 @@
 import { parse } from 'url';
-import * as bodyParser from 'body-parser';
+import {  ServerResponse } from 'http';
+import { json as bodyParserJson, OptionsJson } from 'body-parser';
 
 import handler from './handler';
-import { fulfillFetch, validationErrorHandler } from './_utils';
-import { OptionMiddleware, FetchWithProcessedActions } from '../common/interface';
+import { fulfillFetch, bindFulfillFetchToReq, validationErrorHandler } from './_utils';
+import { OptionMiddleware, FetchСontainingProcessedActions, HttpReq } from '../common/interface';
 
 const performAnAction = handler.process;
 
-export const middleware = (options: OptionMiddleware, callback: (req, res) => any, conf: any) => {
-	const { errorHandler } = options;
+type ReqContainingFetch = HttpReq<{ fetch: FetchСontainingProcessedActions }>;
+
+export type MiddlewareCallback = (req: ReqContainingFetch, res: ServerResponse) => void;
+
+export const middleware = (
+	options: OptionMiddleware,
+	callback: MiddlewareCallback,
+	bodyParserConfig: OptionsJson,
+) => {
+	const { errorHandler, actionErrorHandler } = options;
 	
 	validationErrorHandler(errorHandler);
 
-	const parserMiddleware = bodyParser.json(conf);
+	const parserMiddleware = bodyParserJson(bodyParserConfig);
 
-	return (req, res) => parserMiddleware(req, res, async () => {
+	return (req: ReqContainingFetch, res: ServerResponse) => parserMiddleware(req, res, async () => {
 		const parsedUrl = parse(req.url, true);
 		const { pathname } = parsedUrl;
 	
 		if (pathname !== '/prepare') {
-			req.fulfillFetch = async ({ fetch }) => fulfillFetch({ req, fetch, performAnAction });
+			bindFulfillFetchToReq({ req, performAnAction, actionErrorHandler });
 	
 			return callback(req, res);
 		}
 	
-		const fetchFromReq: FetchWithProcessedActions = req.body.fetch;
+		const { fetch } = req.body;
 	
 		try {
-			const result = await fulfillFetch({ req, fetch: fetchFromReq, performAnAction });
+			const result = await fulfillFetch({ req, fetch, performAnAction });
 
 			res.statusCode = 200;
 			res.setHeader('Content-Type', 'application/json');

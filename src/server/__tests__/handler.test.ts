@@ -1,5 +1,5 @@
 import handler from '../handler';
-import initializeActionCreator from '../../common/initializeActionCreator';
+import { actionCreator, HttpReq, ExpressReq } from '../../common/action';
 
 const mockFunctionHandler = jest.fn()
 	.mockReturnValueOnce(1)
@@ -9,13 +9,13 @@ const mockFunctionHandler = jest.fn()
 const mockReq = { this: 'req' };
 const mockAccumulation = { this: 'accumulation' };
 
-const actionCreator1 = initializeActionCreator<string>('action1');
+const actionCreator1 = actionCreator<string, any, HttpReq>('action1');
 const action1 = actionCreator1('action1');
 
-const actionCreator2 = initializeActionCreator<number>('action2');
+const actionCreator2 = actionCreator<number, any, ExpressReq>('action2');
 const action2 = actionCreator2(885, { parallel: true, passive: true });
 
-const actionCreator3 = initializeActionCreator<any>('action3');
+const actionCreator3 = actionCreator<any, any, ExpressReq>('action3');
 const action3 = actionCreator3({});
 
 describe('handler', () => {

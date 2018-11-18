@@ -1,5 +1,5 @@
-import initializeActionCreator from '../initializeActionCreator';
-import { PayloadMiddleware, ActionOptions } from '../interface';
+import { actionCreator, actionCreatorForHttp, actionCreatorForExpress } from '../action';
+import { PayloadMiddleware, ActionOptions, HttpReq, ExpressReq } from '../interface';
 
 describe('initializeActionCreator', () => {
 	describe('Without options', () => {
@@ -7,7 +7,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = true;
 	
-			const action = initializeActionCreator<boolean>(type);
+			const action = actionCreator<boolean, string, HttpReq>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -18,7 +18,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = 9;
 	
-			const action = initializeActionCreator<number>(type);
+			const action = actionCreatorForExpress<number, boolean>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -29,7 +29,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = 'foo - bar';
 	
-			const action = initializeActionCreator<string>(type);
+			const action = actionCreatorForHttp<string, string>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -40,7 +40,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = { foo: 'bar' };
 	
-			const action = initializeActionCreator<object>(type);
+			const action = actionCreatorForHttp<object, object>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -51,7 +51,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = [ 'foo', 'bar' ];
 	
-			const action = initializeActionCreator<string[]>(type);
+			const action = actionCreator<string[], string, ExpressReq>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -61,9 +61,9 @@ describe('initializeActionCreator', () => {
 		// I think it makes no sense to check all types for wrapped payload
 		it('Payload wrapped in middleware', () => {
 			const type = 'type';
-			const payload: PayloadMiddleware<string> = ({ ctx }) => ctx.pathname; // Will not be called
+			const payload: PayloadMiddleware<string, HttpReq> = ({ ctx }) => ctx.pathname; // Will not be called
 
-			const action = initializeActionCreator<string>(type);
+			const action = actionCreatorForHttp<string, number>(type);
 			expect(action.type).toBe(type);
 
 			const actionForFetch = action(payload);
@@ -91,7 +91,7 @@ describe('initializeActionCreator', () => {
 				optional: true,
 			};
 	
-			const action = initializeActionCreator<string[]>(type);
+			const action = actionCreatorForHttp<string[], number>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch1 = action(payload, options1);
@@ -110,7 +110,7 @@ describe('initializeActionCreator', () => {
 		// I think it makes no sense to check all types for wrapped payload
 		it('Payload wrapped in middleware', () => {
 			const type = 'type';
-			const payload: PayloadMiddleware<string> = ({ ctx }) => ctx.pathname; // Will not be called
+			const payload: PayloadMiddleware<string, HttpReq> = ({ ctx }) => ctx.pathname; // Will not be called
 
 			const options1: ActionOptions = {
 				parallel: true,
@@ -127,7 +127,7 @@ describe('initializeActionCreator', () => {
 				optional: true,
 			};
 
-			const action = initializeActionCreator<string>(type);
+			const action = actionCreatorForHttp<string, number>(type);
 			expect(action.type).toBe(type);
 
 			const actionForFetch1 = action(payload, options1);

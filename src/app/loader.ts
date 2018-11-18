@@ -1,11 +1,16 @@
-import { FetchWithProcessedActions, Ctx } from '../common/interface';
+import {
+	HttpReq,
+	ExpressReq,
+	NextPrepareContext,
+	FetchСontainingProcessedActions,
+} from '../common/interface';
 
-interface IGetProps {
-  ctx: Ctx;
-  fetch: FetchWithProcessedActions;
+interface IGetProps<Req extends HttpReq | ExpressReq> {
+  ctx: NextPrepareContext<Req>;
+  fetch: FetchСontainingProcessedActions;
 }
 
-export const request = (fetch: FetchWithProcessedActions) => new Promise((resolve, reject) => {
+export const request = (fetch: FetchСontainingProcessedActions) => new Promise((resolve, reject) => {
 	const xhr = new XMLHttpRequest();
 	xhr.open('POST', '/prepare', true);
 	xhr.setRequestHeader('Accept', 'application/json');
@@ -28,10 +33,10 @@ export const request = (fetch: FetchWithProcessedActions) => new Promise((resolv
 	};
 });
 
-export const get = async ({ fetch, ctx }: IGetProps) => {
+export const get = async <Req extends HttpReq | ExpressReq>({ fetch, ctx }: IGetProps<Req>) => {
   // Is server
   if (ctx.req) {
-	return await ctx.req.fulfillFetch({ fetch });
+	return await ctx.req.fulfillFetch(fetch);
   }
 
   return await request(fetch);

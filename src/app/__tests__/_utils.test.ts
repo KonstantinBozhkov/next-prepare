@@ -1,5 +1,5 @@
 import { getCorrectAction } from '../_utils';
-import { PayloadMiddlewareArguments } from '../../common/interface';
+import { PayloadMiddlewareArguments, HttpReq } from '../../common/interface';
 
 import {
 	SimpleAction,
@@ -9,7 +9,7 @@ import {
 } from '../../common/__mocks__/actions';
 import { ctx } from '../__mocks__/constants';
 
-const mockArguments: PayloadMiddlewareArguments = {
+const mockArguments: PayloadMiddlewareArguments<HttpReq> = {
 	ctx: ctx.clientSide,
 	pageProps: {},
 };

@@ -1,8 +1,15 @@
-import { Action, PayloadMiddlewareArguments } from '../common/interface';
+import {
+	Action,
+	PayloadMiddlewareArguments,
+	RawAction,
+	HttpReq,
+	ExpressReq,
+	ActionCreator,
+} from '../common/interface';
 
-export const getCorrectAction = (
-	rawAction,
-	props: PayloadMiddlewareArguments,
+export const getCorrectAction = <Req extends HttpReq | ExpressReq>(
+	rawAction: RawAction<any, Req> | ActionCreator<any, any, Req>,
+	props: PayloadMiddlewareArguments<Req>,
 ): Action<any> => {
 	// Action Creator
 	if (typeof rawAction === 'function') {

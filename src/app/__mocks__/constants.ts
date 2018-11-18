@@ -1,9 +1,48 @@
-import { Ctx } from '../../common/interface';
+import { RouterProps } from 'next/router';
+import { NextPrepareContext, HttpReq } from '../../common/interface';
+import { IncomingMessage, ServerResponse } from 'http';
+import * as MockReq from 'mock-req';
 
-const defaultClientSideCtx: Ctx = { pathname: '/', query: {}, asPath: '/' };
-const defaultServerSideCtx: Ctx = { ...defaultClientSideCtx, req: {}, res: {} };
+const defaultClientSideCtx: NextPrepareContext<HttpReq> = {
+	pathname: '/',
+	query: {},
+	asPath: '/',
+};
+
+export const mockReq = new MockReq({
+	method: 'PUT',
+	url: '/stuff?q=thing',
+	headers: {
+		Accept: 'text/plain',
+	},
+	search: 'thing',
+});
+
+const defaultServerSideCtx: NextPrepareContext<HttpReq> = {
+	...defaultClientSideCtx,
+	req: mockReq,
+	res: new ServerResponse(mockReq),
+};
 
 export const ctx = {
 	clientSide: defaultClientSideCtx,
 	serverSide: defaultServerSideCtx,
+};
+
+export const mockRouter: RouterProps = {
+	asPath: '/',
+	route: '/',
+	pathname: '/',
+	query: {},
+	components: {},
+	back: () => null,
+	beforePopState: () => null,
+	prefetch: () => null,
+	push: () => null,
+	reload: () => null,
+	replace: () => null,
+	events: {
+		on: () => null,
+		off: () => null,
+	},
 };

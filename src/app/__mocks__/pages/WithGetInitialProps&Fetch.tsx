@@ -1,7 +1,6 @@
 import * as React from 'react';
 
 import { Fetch } from '../../../common/interface';
-
 import { ActionWithPayloadMiddleware } from '../../../common/__mocks__/actions';
 
 export namespace PageWithGetInitialPropsAndFetch {

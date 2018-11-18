@@ -1,4 +1,10 @@
-import { ActionCreator, HandlerFunction, Action } from '../common/interface';
+import {
+	ActionCreator,
+	HandlerFunction,
+	Action,
+	HttpReq,
+	ExpressReq,
+} from '../common/interface';
 
 class Handler {
 	private static instance: Handler;
@@ -8,10 +14,13 @@ class Handler {
 	}
 
 	private handlers = {} as {
-			[key: string]: HandlerFunction<any, any>;
+		[key: string]: HandlerFunction<any, any>;
 	};
 
-	public on = <P, R>(action: ActionCreator<P, R>, handler: HandlerFunction<P, R> ) => {
+	public on = <P, R, Req extends HttpReq | ExpressReq>(
+		action: ActionCreator<P, R, Req>,
+		handler: HandlerFunction<P, R>,
+	) => {
 		if (this.handlers[action.type]) {
 				throw new Error(`${action.type} function already set.`);
 		}

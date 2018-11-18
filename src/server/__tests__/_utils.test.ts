@@ -10,12 +10,10 @@ import {
 	OptionalAction,
 	// ActionWithPayloadMiddleware - it makes no sense to check, since the middleware will be executed on the client side
 } from '../../common/__mocks__/actions';
-import { ActionErrorHandler } from '../../common/interface';
+import { mockReq } from '../../app/__mocks__/constants';
 
 const performAnAction = jest.fn();
-
-const mockReq = { foo: 'bar' };
-
+ 
 describe('server/_utils', () => {
 	describe('fulfillFetch', () => {
 		beforeEach(jest.resetAllMocks);
@@ -249,4 +247,4 @@ describe('server/_utils', () => {
 			});
 		});
 	});
-});
+}); 

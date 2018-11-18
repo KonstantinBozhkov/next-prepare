@@ -1,8 +1,16 @@
-import { Action, FetchWithProcessedActions, ActionErrorHandler, PerformAnAction } from '../common/interface';
+import {
+	Action,
+	HttpReq,
+	ExpressReq,
+	PerformAnAction,
+	FulfillFetchInReq,
+	ActionErrorHandler,
+	FetchСontainingProcessedActions,
+} from '../common/interface';
 
-const sortFetch = (fetch: FetchWithProcessedActions) => {
-	const parallel: FetchWithProcessedActions = {};
-	const queue: FetchWithProcessedActions = {};
+const sortFetch = (fetch: FetchСontainingProcessedActions) => {
+	const parallel: FetchСontainingProcessedActions = {};
+	const queue: FetchСontainingProcessedActions = {};
 
 	Object.entries(fetch).forEach(([key, action]) => {
 		if (action.options && action.options.parallel) {
@@ -33,19 +41,17 @@ const initCallHandler = (req: any, performAnAction: PerformAnAction, actionError
 	};
 };
 
-interface IFulfillFetchProps {
-	req: any;
-	fetch: FetchWithProcessedActions;
+export const fulfillFetch = async <Req extends HttpReq | ExpressReq>(props: {
+	req: Req;
+	fetch: FetchСontainingProcessedActions;
 	performAnAction: PerformAnAction;
 	actionErrorHandler?: ActionErrorHandler;
-}
-
-export const fulfillFetch = async ({ req, fetch, performAnAction, actionErrorHandler }: IFulfillFetchProps) => {
-	const { parallel, queue } = sortFetch(fetch);
+}) => {
+	const { parallel, queue } = sortFetch(props.fetch);
 
 	const accumulation = {};
 
-	const callHandler = initCallHandler(req, performAnAction, actionErrorHandler);
+	const callHandler = initCallHandler(props.req, props.performAnAction, props.actionErrorHandler);
 
 	// parallel
 	await Promise.all(
@@ -64,35 +70,21 @@ export const fulfillFetch = async ({ req, fetch, performAnAction, actionErrorHan
 		return { ...acc, [key]: result };
 	}, Promise.resolve(accumulation));
 };
-/* 
-export const getHandlers = (pathToHandlers: string): HandlerFunction[] => {
-	if (!pathToHandlers) {
-		throw new Error('Expected pathToHandlers to be a string');
-	}
 
-	if (!fs.existsSync(pathToHandlers)) {
-		throw new Error('File not found. Invalid pathToHandlers');
-	}
+const initFulfillFetchInReq = <Req extends HttpReq | ExpressReq>(props: {
+	req: Req;
+	performAnAction: PerformAnAction;
+	actionErrorHandler?: ActionErrorHandler;
+}): FulfillFetchInReq => fetch => fulfillFetch({ ...props, fetch });
 
-	const handlers = require(pathToHandlers);
-
-	if (typeof pathToHandlers !== 'string') {
-		throw new Error('Expected pathToHandlers to be a string');
-	}
-
-	if (!handlers) {
-		throw new Error('Expected handlers to be a object containing functions');
-	}
-
-	Object.values(handlers).forEach(handler => {
-		if (typeof handler !== 'function') {
-			throw new Error(`Expected ${ handler } handler to be a function.`);
-		}
-	})
-	
-	return handlers;
-}
-*/
+export const bindFulfillFetchToReq = <Req extends HttpReq | ExpressReq>(props: {
+	req: Req;
+	performAnAction: PerformAnAction;
+	actionErrorHandler?: ActionErrorHandler;
+}): Req => {
+	(props.req as any).fulfillFetch = initFulfillFetchInReq<Req>(props);
+	return props.req as any; // TODO: Need refactor
+};
 
 export const validationErrorHandler = errorHandler => {
 	if (errorHandler && typeof errorHandler !== 'function') {

@@ -4,7 +4,7 @@ import * as React from 'react';
 export namespace EmptyPage {
 
 	export class Component extends React.Component {
-		return() {
+		render() {
 			return null;
 		}
 	}
