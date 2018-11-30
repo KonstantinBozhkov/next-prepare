@@ -371,10 +371,6 @@ exports[`Check result page properties with getInitialProps, fetch and fetchFresh
         "title": "Foo",
       },
       "getInitialProps": "result",
-      "passive": Object {
-        "firstName": "Joe",
-        "lastName": "Jonas",
-      },
       "simple": 545,
     }
   }
@@ -406,10 +402,6 @@ exports[`Check result page properties with getInitialProps, fetch and fetchFresh
           "title": "Foo",
         },
         "getInitialProps": "result",
-        "passive": Object {
-          "firstName": "Joe",
-          "lastName": "Jonas",
-        },
         "simple": 545,
       }
     }
@@ -440,15 +432,9 @@ exports[`Check result page properties with getInitialProps, fetch and fetchFresh
         }
       }
       getInitialProps="result"
-      passive={
-        Object {
-          "firstName": "Joe",
-          "lastName": "Jonas",
-        }
-      }
       simple={545}
     >
-      {"getInitialProps":"result","simple":545,"passive":{"firstName":"Joe","lastName":"Jonas"},"foo":{"title":"Foo"}}
+      {"getInitialProps":"result","simple":545,"foo":{"title":"Foo"}}
     </Component>
   </Application>
 </withPrepare(Application)>

@@ -27,13 +27,15 @@ import { PageWithGetInitialPropsAndFetchAndFetchFresh } from '../__mocks__/pages
 
 jest.mock('../loader');
 
-const mockStore: CustomStore = {
+// Store
+const createMockStore = (needToSubscribe = false): CustomStore => ({
+	needToSubscribe,
 	subscribe: jest.fn(),
 	unsubscribe: jest.fn(),
 	setInitialState: jest.fn(),
 	getState: jest.fn().mockRejectedValue({}),
 	setResult: jest.fn(),
-};
+});
 
 type InitGetPageProps = (Wrapped) =>
 	<Req>(Component: React.ComponentType, context: NextPrepareContext<Req>) => Promise<any>;
@@ -55,12 +57,13 @@ const filterPassive = (fetch: FetchСontainingProcessedActions) => {
 	}, {});
 };
 
-const WrappedApp = withPrepare(mockStore)(App);
-const getPageProps = initGetPageProps(WrappedApp);
-
 // EmptyPage
 describe('Check result page properties without getInitialProps and fetch', () => {
 	beforeEach(jest.resetAllMocks);
+
+	const mockStore = createMockStore();
+	const WrappedApp = withPrepare(mockStore)(App);
+	const getPageProps = initGetPageProps(WrappedApp);
 	const { Component } = EmptyPage;
 
 	describe('Getting page props', () => {
@@ -108,6 +111,10 @@ describe('Check result page properties without getInitialProps and fetch', () =>
 // PageWithGetInitialProps
 describe('Check result page properties with getInitialProps', () => {
 	beforeEach(jest.resetAllMocks);
+
+	const mockStore = createMockStore();
+	const WrappedApp = withPrepare(mockStore)(App);
+	const getPageProps = initGetPageProps(WrappedApp);
 	const { Component, getInitialPropsResult } = PageWithGetInitialProps;
 
 	describe('Getting page props', () => {
@@ -156,6 +163,10 @@ describe('Check result page properties with getInitialProps', () => {
 // PageWithFetch
 describe('Check result page properties with fetch', () => {
 	beforeEach(jest.resetAllMocks);
+
+	const mockStore = createMockStore();
+	const WrappedApp = withPrepare(mockStore)(App);
+	const getPageProps = initGetPageProps(WrappedApp);
 	const { Component, fetchResult } = PageWithFetch;
 
 	describe('Getting page props', () => {
@@ -229,6 +240,10 @@ describe('Check result page properties with fetch', () => {
 // PageWithGetInitialPropsAndFetch
 describe('Check result page properties with getInitialProps and fetch', () => {
 	beforeEach(jest.resetAllMocks);
+
+	const mockStore = createMockStore();
+	const WrappedApp = withPrepare(mockStore)(App);
+	const getPageProps = initGetPageProps(WrappedApp);
 	const { Component, fetchResult, getInitialPropsResult } = PageWithGetInitialPropsAndFetch;
 
 	describe('Getting page props', () => {
@@ -302,6 +317,10 @@ describe('Check result page properties with getInitialProps and fetch', () => {
 // PageWithFetchFresh
 describe('Check result page properties with fetchFresh', () => {
 	beforeEach(jest.resetAllMocks);
+
+	const mockStore = createMockStore();
+	const WrappedApp = withPrepare(mockStore)(App);
+	const getPageProps = initGetPageProps(WrappedApp);
 	const { Component, fetchFreshResult } = PageWithFetchFresh;
 
 	describe('Getting page props', () => {
@@ -380,6 +399,10 @@ describe('Check result page properties with fetchFresh', () => {
 // PageWithFetchAndFetchFresh
 describe('Check result page properties with fetch and fetchFresh', () => {
 	beforeEach(jest.resetAllMocks);
+
+	const mockStore = createMockStore();
+	const WrappedApp = withPrepare(mockStore)(App);
+	const getPageProps = initGetPageProps(WrappedApp);
 	const { Component, fetchResult, fetchFreshResult } = PageWithFetchAndFetchFresh;
 
 	describe('Getting page props', () => {
@@ -457,7 +480,10 @@ describe('Check result page properties with fetch and fetchFresh', () => {
 
 // PageWithGetInitialPropsAndFetchAndFetchFresh
 describe('Check result page properties with getInitialProps, fetch and fetchFresh', () => {
-	beforeEach(jest.resetAllMocks);
+	
+	const mockStore = createMockStore(true); // With subscribe
+	const WrappedApp = withPrepare(mockStore)(App);
+	const getPageProps = initGetPageProps(WrappedApp);
 	const {
 		Component,
 		getInitialPropsResult,
@@ -467,8 +493,9 @@ describe('Check result page properties with getInitialProps, fetch and fetchFres
 	} = PageWithGetInitialPropsAndFetchAndFetchFresh;
 
 	describe('Getting page props', () => {
+		beforeEach(jest.resetAllMocks);
+
 		describe('Client side', () => {
-			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
 			it('The loader will be invoked with context arguments and an actions (fetch and fetchFresh). The result of his called will be recorded in the store', async () => {
 				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
@@ -528,19 +555,51 @@ describe('Check result page properties with getInitialProps, fetch and fetchFres
 	});
 
 	describe('Lifecycle', () => {
+		jest.resetAllMocks();
+		let wrapper;
+		let page;
+
 		it('Mount', () => {
-			const wrapper = mount(
+			wrapper = mount(
 				<WrappedApp
 					Component={ Component }
 					router={ mockRouter }
-					pageProps={{ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult }}
+					pageProps={{ ...getInitialPropsResult, ...fetchResultWithoutPassive, ...fetchFreshResult }}
 				/>,
 			);
-			const page = wrapper.find(Component);
+			page = wrapper.find(Component);
 
-			expect(mockStore.setInitialState).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
-			expect(page.props()).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
+			expect((mockStore.setInitialState as any).mock.calls[0])
+				.toEqual([{ ...fetchResultWithoutPassive, ...fetchFreshResult }]);
+
+			// Without passive
+			expect(page.props())
+				.toEqual({
+					...getInitialPropsResult,
+					...fetchResultWithoutPassive,
+					...fetchFreshResult,
+				});
+
 			expect(wrapper).toMatchSnapshot();
+		});
+		
+		it('Rerender with updated page props', async () => {
+			// Since the component is subscribed to the changes, we pass in new parameters to it.
+			(mockStore.subscribe as any).mock.calls[0][0]({
+				...fetchResult, // With passive
+				...fetchFreshResult,
+			});
+			
+			wrapper.update(); // Need to call this method to update
+			page = wrapper.find(Component);
+
+			// With passive
+			expect(page.props())
+				.toEqual({
+					...getInitialPropsResult,
+					...fetchResult,
+					...fetchFreshResult,
+				});
 		});
 	});
 });

@@ -167,7 +167,7 @@ const hoc = ({ store }: IConfiguration) => {
 				}
 			}
 
-			changeStore(newState: object) {
+			changeStore = (newState: object) => {
 				const oldFetchData = {};
 				const newFetchData = {};
 				
@@ -189,10 +189,9 @@ const hoc = ({ store }: IConfiguration) => {
 			}
 
 			render() {
-				const { pageProps: _, ...otherProps } = this.props;
 				return (
 					<BC
-						{ ...otherProps }
+						{ ...this.props }
 						pageProps={ this.state.pageProps }
 					/>
 				);
