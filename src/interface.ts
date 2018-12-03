@@ -74,13 +74,13 @@ export type PayloadMiddlewareArguments<Req> = {
 export type PayloadMiddleware<P, Req> = (props: PayloadMiddlewareArguments<Req>) => P;
 
 /* HANDLER */
-export type HandlerFunctionProps<P> = {
-	req: any;
+export type HandlerFunctionProps<P, Req> = {
+	ctx: NextPrepareContext<Req>;
 	action: Action<P>;
 	accumulation?: object;
 };
 
-export type HandlerFunction<P, R> = (props: HandlerFunctionProps<P>) => R|Promise<R>;
+export type HandlerFunction<P, R, Req> = (props: HandlerFunctionProps<P, Req>) => R|Promise<R>;
 
 /* MIDDLEWARES */
 export type FulfillFetchInReq = <Req>(fetch: FetchСontainingProcessedActions) => Promise<any>;
@@ -92,7 +92,7 @@ export type OptionMiddleware = {
 	errorHandler?: (error: Error, req, res) => void;
 };
 
-export type PerformAnAction = (action: Action<any>, req: any, accumulation?: any) => any;
+export type PerformAnAction = <Req>(action: Action<any>, req: NextPrepareContext<Req>, accumulation?: any) => any;
 
 /* STORE */
 export type CustomStore = {

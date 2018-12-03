@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import { Fetch } from '../../../common/interface';
-import { SimpleAction } from '../../../common/__mocks__/actions';
+import { Fetch } from '../../interface';
+import { SimpleAction } from '../../__mocks__/actions';
 
 export namespace PageWithFetch {
 	export class Component extends React.Component {

@@ -1,18 +1,22 @@
 {
   "name": "next-prepare",
   "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "description": "",
   "scripts": {
     "clearing": "rm -rf app common server",
     "build": "npx tsc --declaration && exit 0",
     "test": "jest && exit 0"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KonstantinBozhkov/next-prepare.git"
+  },
   "author": "Konstantin Bozhkov <enterkostya@mail.ru>",
   "license": "MIT",
   "files": [
-    "app",
-    "server",
-    "common"
+    "dist"
   ],
   "devDependencies": {
     "@types/body-parser": "^1.17.0",

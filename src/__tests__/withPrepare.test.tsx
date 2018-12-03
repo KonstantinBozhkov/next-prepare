@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { mount } from 'enzyme';
 
-import loader from '../loader';
 import withPrepare from '../withPrepare';
 import { getCorrectAction } from '../_utils';
 import {
-	CustomStore,
-	HttpReq,
 	Fetch,
+	HttpReq,
+	CustomStore,
 	NextPrepareContext,
 	PayloadMiddlewareArguments,
 	FetchСontainingProcessedActions,
-} from '../../common/interface';
+} from '../interface';
+import handler from '../handler';
 
 import App from '../__mocks__/pages/_app';
 import { ctx, mockRouter } from '../__mocks__/constants';
@@ -25,7 +25,7 @@ import { PageWithFetchAndFetchFresh } from '../__mocks__/pages/WithFetch&FetchFr
 import { PageWithGetInitialPropsAndFetch } from '../__mocks__/pages/WithGetInitialProps&Fetch';
 import { PageWithGetInitialPropsAndFetchAndFetchFresh } from '../__mocks__/pages/WithGetInitialProps&Fetch&FetchFresh';
 
-jest.mock('../loader');
+jest.mock('../handler');
 
 // Store
 const createMockStore = (needToSubscribe = false): CustomStore => ({
@@ -75,7 +75,7 @@ describe('Check result page properties without getInitialProps and fetch', () =>
 	
 				expect(pagePropsResult).toEqual({});
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).not.toBeCalled();
+				expect(handler.fulfillFetch).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
 			});
 		});
@@ -86,7 +86,7 @@ describe('Check result page properties without getInitialProps and fetch', () =>
 	
 				expect(pagePropsResult).toEqual({});
 				expect(mockStore.getState).not.toBeCalled();
-				expect(loader.get).not.toBeCalled();
+				expect(handler.fulfillFetch).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
 			});
 		});
@@ -125,7 +125,7 @@ describe('Check result page properties with getInitialProps', () => {
 	
 				expect(pagePropsResult).toEqual(getInitialPropsResult);
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).not.toBeCalled();
+				expect(handler.fulfillFetch).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
 			});
 		});
@@ -136,7 +136,7 @@ describe('Check result page properties with getInitialProps', () => {
 	
 				expect(pagePropsResult).toEqual(getInitialPropsResult);
 				expect(mockStore.getState).not.toBeCalled();
-				expect(loader.get).not.toBeCalled();
+				expect(handler.fulfillFetch).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
 			});
 		});
@@ -173,8 +173,8 @@ describe('Check result page properties with fetch', () => {
 		describe('Client side', async () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetch). The result of his called will be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetch). The result of his called will be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
@@ -184,26 +184,26 @@ describe('Check result page properties with fetch', () => {
 	
 				expect(pagePropsResult).toEqual({ ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
 			});
 	
-			it('Having the result of fetch in the store does not occur to the loader', async () => {
+			it('Having the result of fetch in the store does not occur to the handler.fulfillFetch', async () => {
 				(mockStore.getState as any).mockReturnValueOnce(fetchResult);
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 	
 				expect(pagePropsResult).toEqual({ ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).not.toBeCalled();
+				expect(handler.fulfillFetch).not.toBeCalled();
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
 			});
 		});
 	
 		describe('Server side', async () => {
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetch). The result of his called will NOT be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetch). The result of his called will NOT be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
@@ -213,7 +213,7 @@ describe('Check result page properties with fetch', () => {
 	
 				expect(pagePropsResult).toEqual({ ...fetchResult });
 				expect(mockStore.getState).not.toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
 				expect(mockStore.setResult).not.toBeCalled();
 			});
 		});
@@ -250,8 +250,8 @@ describe('Check result page properties with getInitialProps and fetch', () => {
 		describe('Client side', () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetch). The result of his called will be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce(fetchResult);
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetch). The result of his called will be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce(fetchResult);
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
@@ -262,25 +262,25 @@ describe('Check result page properties with getInitialProps and fetch', () => {
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch});
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch});
 			});
 	
-			it('Having the result of preparation in the store does not occur to the loader', async () => {
+			it('Having the result of preparation in the store does not occur to the handler.fulfillFetch', async () => {
 				(mockStore.getState as any).mockReturnValueOnce(fetchResult);
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).not.toBeCalled();
+				expect(handler.fulfillFetch).not.toBeCalled();
 				expect(mockStore.setResult).toBeCalledWith(fetchResult);
 			});
 		});
 	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetch) array. The result of his called will NOT be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce(fetchResult);
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetch) array. The result of his called will NOT be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce(fetchResult);
 	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch(Component.fetch, {
@@ -291,7 +291,7 @@ describe('Check result page properties with getInitialProps and fetch', () => {
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult });
 				expect(mockStore.getState).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
 			});
 		});
 	});
@@ -327,8 +327,8 @@ describe('Check result page properties with fetchFresh', () => {
 		describe('Client side', () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetchFresh) array. The result of his called will be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetchFresh) array. The result of his called will be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
@@ -338,13 +338,13 @@ describe('Check result page properties with fetchFresh', () => {
 	
 				expect(pagePropsResult).toEqual({ ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchFreshResult });
 			});
 	
 			it('The result from the store will be ignored and a request for a new result will be made', async () => {
 				(mockStore.getState as any).mockReturnValueOnce({ ...fetchFreshResult });
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
@@ -354,15 +354,15 @@ describe('Check result page properties with fetchFresh', () => {
 	
 				expect(pagePropsResult).toEqual({ ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchFreshResult });
 			});
 		});
 	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetchFresh) array. The result of his called will NOT be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetchFresh) array. The result of his called will NOT be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchFreshResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
@@ -373,7 +373,7 @@ describe('Check result page properties with fetchFresh', () => {
 				expect(pagePropsResult).toEqual({ ...fetchFreshResult });
 				expect(mockStore.getState).not.toBeCalled();
 				expect(mockStore.setResult).not.toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
 			});
 		});
 	});
@@ -409,8 +409,8 @@ describe('Check result page properties with fetch and fetchFresh', () => {
 		describe('Client side', () => {
 			beforeEach(jest.resetAllMocks);
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetch and fetchFresh) array. The result of his called will be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetch and fetchFresh) array. The result of his called will be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch({ ...Component.fetch, ...Component.fetchFresh }, {
@@ -420,13 +420,13 @@ describe('Check result page properties with fetch and fetchFresh', () => {
 	
 				expect(pagePropsResult).toEqual({ ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
 			});
 			// tslint:disable-next-line:max-line-length
 			it('A request will be made to get a new result on prepareFresh. And the result of prepare will be taken from the store', async () => {
 				(mockStore.getState as any).mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
-				loader.get = jest.fn().mockReturnValueOnce(fetchFreshResult);
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce(fetchFreshResult);
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch(Component.fetchFresh, {
@@ -436,15 +436,15 @@ describe('Check result page properties with fetch and fetchFresh', () => {
 	
 				expect(pagePropsResult).toEqual({ ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
 			});
 		});
 	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (prepareFresh and prepareFresh) array. The result of his called will NOT be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (prepareFresh and prepareFresh) array. The result of his called will NOT be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				const correctFetch = getCorrectFetch({ ...Component.fetch, ...Component.fetchFresh }, {
@@ -454,7 +454,7 @@ describe('Check result page properties with fetch and fetchFresh', () => {
 	
 				expect(pagePropsResult).toEqual({ ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).not.toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
 				expect(mockStore.setResult).not.toBeCalled();
 			});
 		});
@@ -497,8 +497,8 @@ describe('Check result page properties with getInitialProps, fetch and fetchFres
 
 		describe('Client side', () => {
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (fetch and fetchFresh). The result of his called will be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (fetch and fetchFresh). The result of his called will be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				// This page contains a passive action
@@ -511,13 +511,13 @@ describe('Check result page properties with getInitialProps, fetch and fetchFres
 	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
 			});
 			// tslint:disable-next-line:max-line-length
 			it('A request will be made to get a new result on fetchFresh. And the result is fetched taken from the store, and the result is added from getInitialProps', async () => {
 				(mockStore.getState as any).mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
-				loader.get = jest.fn().mockReturnValueOnce(fetchFreshResult);
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce(fetchFreshResult);
 	
 				const pagePropsResult = await getPageProps(Component, ctx.clientSide);
 				const correctFetch = getCorrectFetch({ ...Component.fetchFresh }, {
@@ -527,15 +527,15 @@ describe('Check result page properties with getInitialProps, fetch and fetchFres
 	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.clientSide, fetch: correctFetch });
 				expect(mockStore.setResult).toBeCalledWith({ ...fetchResult, ...fetchFreshResult });
 			});
 		});
 	
 		describe('Server side', () => {
 			// tslint:disable-next-line:max-line-length
-			it('The loader will be invoked with context arguments and an actions (prepare & prepareFresh) array. The result of his called will NOT be recorded in the store', async () => {
-				loader.get = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
+			it('The handler.fulfillFetch will be invoked with context arguments and an actions (prepare & prepareFresh) array. The result of his called will NOT be recorded in the store', async () => {
+				handler.fulfillFetch = jest.fn().mockReturnValueOnce({ ...fetchResult, ...fetchFreshResult });
 	
 				const pagePropsResult = await getPageProps(Component, ctx.serverSide);
 				// This page contains a passive action
@@ -548,7 +548,7 @@ describe('Check result page properties with getInitialProps, fetch and fetchFres
 	
 				expect(pagePropsResult).toEqual({ ...getInitialPropsResult, ...fetchResult, ...fetchFreshResult });
 				expect(mockStore.getState).not.toBeCalled();
-				expect(loader.get).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
+				expect(handler.fulfillFetch).toBeCalledWith({ ctx: ctx.serverSide, fetch: correctFetch });
 				expect(mockStore.setResult).not.toBeCalled();
 			});
 		});

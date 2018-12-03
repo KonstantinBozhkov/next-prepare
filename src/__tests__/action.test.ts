@@ -1,4 +1,4 @@
-import { actionCreator, actionCreatorForHttp, actionCreatorForExpress } from '../action';
+import { actionCreator } from '../action';
 import { PayloadMiddleware, ActionOptions, HttpReq, ExpressReq } from '../interface';
 
 describe('initializeActionCreator', () => {
@@ -18,7 +18,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = 9;
 	
-			const action = actionCreatorForExpress<number, boolean>(type);
+			const action = actionCreator<number, boolean, ExpressReq>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -29,7 +29,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = 'foo - bar';
 	
-			const action = actionCreatorForHttp<string, string>(type);
+			const action = actionCreator<string, string, HttpReq>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -40,7 +40,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload = { foo: 'bar' };
 	
-			const action = actionCreatorForHttp<object, object>(type);
+			const action = actionCreator<object, object, HttpReq>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch = action(payload);
@@ -63,7 +63,7 @@ describe('initializeActionCreator', () => {
 			const type = 'type';
 			const payload: PayloadMiddleware<string, HttpReq> = ({ ctx }) => ctx.pathname; // Will not be called
 
-			const action = actionCreatorForHttp<string, number>(type);
+			const action = actionCreator<string, number, HttpReq>(type);
 			expect(action.type).toBe(type);
 
 			const actionForFetch = action(payload);
@@ -91,7 +91,7 @@ describe('initializeActionCreator', () => {
 				optional: true,
 			};
 	
-			const action = actionCreatorForHttp<string[], number>(type);
+			const action = actionCreator<string[], number, HttpReq>(type);
 			expect(action.type).toBe(type);
 	
 			const actionForFetch1 = action(payload, options1);
@@ -127,7 +127,7 @@ describe('initializeActionCreator', () => {
 				optional: true,
 			};
 
-			const action = actionCreatorForHttp<string, number>(type);
+			const action = actionCreator<string, number, HttpReq>(type);
 			expect(action.type).toBe(type);
 
 			const actionForFetch1 = action(payload, options1);

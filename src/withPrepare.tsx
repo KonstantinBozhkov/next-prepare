@@ -9,8 +9,8 @@ import {
 	PageComponent,
 	NextPrepareAppContext,
 	FetchСontainingProcessedActions,
-} from '../common/interface';
-import loader from './loader';
+} from './interface';
+import handler from './handler';
 import { getCorrectAction } from './_utils';
 
 const checkValidPrepareValue = prepareValue => {
@@ -105,8 +105,8 @@ const hoc = ({ store }: IConfiguration) => {
 
 				if (Object.keys(needLoad).length > 0) {
 					try {
-						const response = await loader.get({ ctx, fetch: needLoad });
-						Object.assign(fetchResult, response);
+						const result = await handler.fulfillFetch({ ctx, fetch: needLoad });
+						Object.assign(fetchResult, result);
 					} catch (err) {
 						return { err: err.stack };
 					}

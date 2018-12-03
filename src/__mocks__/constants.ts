@@ -1,6 +1,6 @@
 import { RouterProps } from 'next/router';
-import { NextPrepareContext, HttpReq } from '../../common/interface';
-import { IncomingMessage, ServerResponse } from 'http';
+import { NextPrepareContext, HttpReq } from '../interface';
+import { ServerResponse } from 'http';
 import * as MockReq from 'mock-req';
 
 const defaultClientSideCtx: NextPrepareContext<HttpReq> = {

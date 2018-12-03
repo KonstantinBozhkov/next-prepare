@@ -1,6 +1,4 @@
 node_modules/
-/server
-/common
-/app
+/dist
 .next
 .idea

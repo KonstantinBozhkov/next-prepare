@@ -1,4 +1,4 @@
-import { CustomStore } from '../common/interface';
+import { CustomStore } from './interface';
 
 class Store implements CustomStore {
 	private static instance: Store;

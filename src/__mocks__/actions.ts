@@ -1,8 +1,4 @@
-import {
-	actionCreator as createActionCreator,
-	actionCreatorForHttp,
-	actionCreatorForExpress,
-} from '../action';
+import { actionCreator as createActionCreator } from '../action';
 import { Action, PayloadMiddleware, HttpReq, ExpressReq } from '../interface';
 
 export namespace SimpleAction {
@@ -22,7 +18,7 @@ export namespace SimpleAction {
 export namespace ParallelAction {
 	export const payload = ['a', 'b', 'c'];
 
-	export const actionCreator = actionCreatorForHttp<string[], string>('ParallelAction');
+	export const actionCreator = createActionCreator<string[], string, ExpressReq>('ParallelAction');
 	export const actionCreatorFields = { type: 'ParallelAction', payload: null };
 
 	export const action = actionCreator(payload, { parallel: true });
@@ -44,7 +40,7 @@ export namespace PassiveAction {
 		lastName: 'Jonas',
 	};
 
-	export const actionCreator = actionCreatorForExpress<IPayload, number>('PassiveAction');
+	export const actionCreator = createActionCreator<IPayload, number, ExpressReq>('PassiveAction');
 	export const actionCreatorFields = { type: 'PassiveAction', payload: null };
 
 	export const action = actionCreator(payload, { passive: true });
@@ -64,7 +60,7 @@ export namespace OptionalAction {
 		nickname: 'Noob',
 	};
 
-	export const actionCreator = actionCreatorForExpress<IPayload, string>('OptionalAction');
+	export const actionCreator = createActionCreator<IPayload, string, ExpressReq>('OptionalAction');
 	export const actionCreatorFields = { type: 'OptionalAction', payload: null };
 
 	export const action = actionCreator(payload, { optional: true });
@@ -90,7 +86,8 @@ export namespace ActionWithPayloadMiddleware {
 
 	export const payloadMiddleware = jest.fn(middleware);
 
-	export const actionCreator = actionCreatorForExpress<IPayloadMiddlewareResult, object>('ActionWithPayloadMiddleware');
+	export const actionCreator =
+		createActionCreator<IPayloadMiddlewareResult, object, HttpReq>('ActionWithPayloadMiddleware');
 	export const actionCreatorFields = { type: 'ActionWithPayloadMiddleware', payload: null };
 
 	export const action = actionCreator(payloadMiddleware);
