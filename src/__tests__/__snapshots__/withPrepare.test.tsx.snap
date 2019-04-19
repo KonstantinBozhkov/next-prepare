@@ -1,0 +1,493 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Check result page properties with fetch Lifecycle Mount 1`] = `
+<withPrepare(Application)
+  Component={[Function]}
+  pageProps={
+    Object {
+      "simple": 545,
+    }
+  }
+  router={
+    Object {
+      "asPath": "/",
+      "back": [Function],
+      "beforePopState": [Function],
+      "components": Object {},
+      "events": Object {
+        "off": [Function],
+        "on": [Function],
+      },
+      "pathname": "/",
+      "prefetch": [Function],
+      "push": [Function],
+      "query": Object {},
+      "reload": [Function],
+      "replace": [Function],
+      "route": "/",
+    }
+  }
+>
+  <Application
+    Component={[Function]}
+    pageProps={
+      Object {
+        "simple": 545,
+      }
+    }
+    router={
+      Object {
+        "asPath": "/",
+        "back": [Function],
+        "beforePopState": [Function],
+        "components": Object {},
+        "events": Object {
+          "off": [Function],
+          "on": [Function],
+        },
+        "pathname": "/",
+        "prefetch": [Function],
+        "push": [Function],
+        "query": Object {},
+        "reload": [Function],
+        "replace": [Function],
+        "route": "/",
+      }
+    }
+  >
+    <Component
+      simple={545}
+    >
+      {"simple":545}
+    </Component>
+  </Application>
+</withPrepare(Application)>
+`;
+
+exports[`Check result page properties with fetch and fetchFresh Lifecycle Mount 1`] = `
+<withPrepare(Application)
+  Component={[Function]}
+  pageProps={
+    Object {
+      "parallel": Array [
+        "a",
+        "b",
+        "c",
+      ],
+      "simple": 545,
+    }
+  }
+  router={
+    Object {
+      "asPath": "/",
+      "back": [Function],
+      "beforePopState": [Function],
+      "components": Object {},
+      "events": Object {
+        "off": [Function],
+        "on": [Function],
+      },
+      "pathname": "/",
+      "prefetch": [Function],
+      "push": [Function],
+      "query": Object {},
+      "reload": [Function],
+      "replace": [Function],
+      "route": "/",
+    }
+  }
+>
+  <Application
+    Component={[Function]}
+    pageProps={
+      Object {
+        "parallel": Array [
+          "a",
+          "b",
+          "c",
+        ],
+        "simple": 545,
+      }
+    }
+    router={
+      Object {
+        "asPath": "/",
+        "back": [Function],
+        "beforePopState": [Function],
+        "components": Object {},
+        "events": Object {
+          "off": [Function],
+          "on": [Function],
+        },
+        "pathname": "/",
+        "prefetch": [Function],
+        "push": [Function],
+        "query": Object {},
+        "reload": [Function],
+        "replace": [Function],
+        "route": "/",
+      }
+    }
+  >
+    <Component
+      parallel={
+        Array [
+          "a",
+          "b",
+          "c",
+        ]
+      }
+      simple={545}
+    >
+      {"simple":545,"parallel":["a","b","c"]}
+    </Component>
+  </Application>
+</withPrepare(Application)>
+`;
+
+exports[`Check result page properties with fetchFresh Lifecycle Mount 1`] = `
+<withPrepare(Application)
+  Component={[Function]}
+  pageProps={
+    Object {
+      "bar": Array [
+        "a",
+        "b",
+        "c",
+      ],
+    }
+  }
+  router={
+    Object {
+      "asPath": "/",
+      "back": [Function],
+      "beforePopState": [Function],
+      "components": Object {},
+      "events": Object {
+        "off": [Function],
+        "on": [Function],
+      },
+      "pathname": "/",
+      "prefetch": [Function],
+      "push": [Function],
+      "query": Object {},
+      "reload": [Function],
+      "replace": [Function],
+      "route": "/",
+    }
+  }
+>
+  <Application
+    Component={[Function]}
+    pageProps={
+      Object {
+        "bar": Array [
+          "a",
+          "b",
+          "c",
+        ],
+      }
+    }
+    router={
+      Object {
+        "asPath": "/",
+        "back": [Function],
+        "beforePopState": [Function],
+        "components": Object {},
+        "events": Object {
+          "off": [Function],
+          "on": [Function],
+        },
+        "pathname": "/",
+        "prefetch": [Function],
+        "push": [Function],
+        "query": Object {},
+        "reload": [Function],
+        "replace": [Function],
+        "route": "/",
+      }
+    }
+  >
+    <Component
+      bar={
+        Array [
+          "a",
+          "b",
+          "c",
+        ]
+      }
+    >
+      {"bar":["a","b","c"]}
+    </Component>
+  </Application>
+</withPrepare(Application)>
+`;
+
+exports[`Check result page properties with getInitialProps Lifecycle Mount 1`] = `
+<withPrepare(Application)
+  Component={[Function]}
+  pageProps={
+    Object {
+      "foo": "bar",
+    }
+  }
+  router={
+    Object {
+      "asPath": "/",
+      "back": [Function],
+      "beforePopState": [Function],
+      "components": Object {},
+      "events": Object {
+        "off": [Function],
+        "on": [Function],
+      },
+      "pathname": "/",
+      "prefetch": [Function],
+      "push": [Function],
+      "query": Object {},
+      "reload": [Function],
+      "replace": [Function],
+      "route": "/",
+    }
+  }
+>
+  <Application
+    Component={[Function]}
+    pageProps={
+      Object {
+        "foo": "bar",
+      }
+    }
+    router={
+      Object {
+        "asPath": "/",
+        "back": [Function],
+        "beforePopState": [Function],
+        "components": Object {},
+        "events": Object {
+          "off": [Function],
+          "on": [Function],
+        },
+        "pathname": "/",
+        "prefetch": [Function],
+        "push": [Function],
+        "query": Object {},
+        "reload": [Function],
+        "replace": [Function],
+        "route": "/",
+      }
+    }
+  >
+    <Component
+      foo="bar"
+    >
+      {"foo":"bar"}
+    </Component>
+  </Application>
+</withPrepare(Application)>
+`;
+
+exports[`Check result page properties with getInitialProps and fetch Lifecycle Mount 1`] = `
+<withPrepare(Application)
+  Component={[Function]}
+  pageProps={
+    Object {
+      "foo": Object {
+        "title": "Foo",
+      },
+      "getInitialProps": "result",
+    }
+  }
+  router={
+    Object {
+      "asPath": "/",
+      "back": [Function],
+      "beforePopState": [Function],
+      "components": Object {},
+      "events": Object {
+        "off": [Function],
+        "on": [Function],
+      },
+      "pathname": "/",
+      "prefetch": [Function],
+      "push": [Function],
+      "query": Object {},
+      "reload": [Function],
+      "replace": [Function],
+      "route": "/",
+    }
+  }
+>
+  <Application
+    Component={[Function]}
+    pageProps={
+      Object {
+        "foo": Object {
+          "title": "Foo",
+        },
+        "getInitialProps": "result",
+      }
+    }
+    router={
+      Object {
+        "asPath": "/",
+        "back": [Function],
+        "beforePopState": [Function],
+        "components": Object {},
+        "events": Object {
+          "off": [Function],
+          "on": [Function],
+        },
+        "pathname": "/",
+        "prefetch": [Function],
+        "push": [Function],
+        "query": Object {},
+        "reload": [Function],
+        "replace": [Function],
+        "route": "/",
+      }
+    }
+  >
+    <Component
+      foo={
+        Object {
+          "title": "Foo",
+        }
+      }
+      getInitialProps="result"
+    >
+      {"foo":{"title":"Foo"},"getInitialProps":"result"}
+    </Component>
+  </Application>
+</withPrepare(Application)>
+`;
+
+exports[`Check result page properties with getInitialProps, fetch and fetchFresh Lifecycle Mount 1`] = `
+<withPrepare(Application)
+  Component={[Function]}
+  pageProps={
+    Object {
+      "foo": Object {
+        "title": "Foo",
+      },
+      "getInitialProps": "result",
+      "simple": 545,
+    }
+  }
+  router={
+    Object {
+      "asPath": "/",
+      "back": [Function],
+      "beforePopState": [Function],
+      "components": Object {},
+      "events": Object {
+        "off": [Function],
+        "on": [Function],
+      },
+      "pathname": "/",
+      "prefetch": [Function],
+      "push": [Function],
+      "query": Object {},
+      "reload": [Function],
+      "replace": [Function],
+      "route": "/",
+    }
+  }
+>
+  <Application
+    Component={[Function]}
+    pageProps={
+      Object {
+        "foo": Object {
+          "title": "Foo",
+        },
+        "getInitialProps": "result",
+        "simple": 545,
+      }
+    }
+    router={
+      Object {
+        "asPath": "/",
+        "back": [Function],
+        "beforePopState": [Function],
+        "components": Object {},
+        "events": Object {
+          "off": [Function],
+          "on": [Function],
+        },
+        "pathname": "/",
+        "prefetch": [Function],
+        "push": [Function],
+        "query": Object {},
+        "reload": [Function],
+        "replace": [Function],
+        "route": "/",
+      }
+    }
+  >
+    <Component
+      foo={
+        Object {
+          "title": "Foo",
+        }
+      }
+      getInitialProps="result"
+      simple={545}
+    >
+      {"getInitialProps":"result","simple":545,"foo":{"title":"Foo"}}
+    </Component>
+  </Application>
+</withPrepare(Application)>
+`;
+
+exports[`Check result page properties without getInitialProps and fetch Lifecycle Mount 1`] = `
+<withPrepare(Application)
+  Component={[Function]}
+  pageProps={Object {}}
+  router={
+    Object {
+      "asPath": "/",
+      "back": [Function],
+      "beforePopState": [Function],
+      "components": Object {},
+      "events": Object {
+        "off": [Function],
+        "on": [Function],
+      },
+      "pathname": "/",
+      "prefetch": [Function],
+      "push": [Function],
+      "query": Object {},
+      "reload": [Function],
+      "replace": [Function],
+      "route": "/",
+    }
+  }
+>
+  <Application
+    Component={[Function]}
+    pageProps={Object {}}
+    router={
+      Object {
+        "asPath": "/",
+        "back": [Function],
+        "beforePopState": [Function],
+        "components": Object {},
+        "events": Object {
+          "off": [Function],
+          "on": [Function],
+        },
+        "pathname": "/",
+        "prefetch": [Function],
+        "push": [Function],
+        "query": Object {},
+        "reload": [Function],
+        "replace": [Function],
+        "route": "/",
+      }
+    }
+  >
+    <Component />
+  </Application>
+</withPrepare(Application)>
+`;

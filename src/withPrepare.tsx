@@ -1,13 +1,16 @@
 import * as React from 'react';
+import { DefaultAppIProps, AppProps } from 'next/app';
 
 import {
-	Action,
 	Fetch,
-	FetchWithProcessedActions,
+	Action,
+	HttpReq,
 	CustomStore,
-	WithPrepareConstructorProps,
-} from '../common/interface';
-import loader from './loader';
+	PageComponent,
+	NextPrepareAppContext,
+	FetchСontainingProcessedActions,
+} from './interface';
+import handler from './handler';
 import { getCorrectAction } from './_utils';
 
 const checkValidPrepareValue = prepareValue => {
@@ -31,12 +34,20 @@ interface IConfiguration {
 	store: CustomStore;
 }
 
+interface IWrappedComponentProps extends DefaultAppIProps, AppProps {
+	Component: PageComponent;
+}
+
+interface IWrappedComponentState {
+	pageProps: object;
+}
+
 const hoc = ({ store }: IConfiguration) => {
 	return BC => { // BC - Base component
-		return class WrappedComponent extends React.Component {
+		return class WrappedComponent extends React.Component<IWrappedComponentProps, IWrappedComponentState> {
 			static displayName = `withPrepare(${BC.displayName || BC.name || 'BaseComponent'})`;
 
-			static async getInitialProps(props) {
+			static async getInitialProps(props: NextPrepareAppContext<HttpReq>) {
 				const { Component, ctx } = props;
 				const isServer = !!ctx.req;
 				const state = {};
@@ -44,7 +55,7 @@ const hoc = ({ store }: IConfiguration) => {
 				const fetchResult = {};
 				const pagePropsFromGetInitialProps = {};
 
-				const needLoad: FetchWithProcessedActions = {};
+				const needLoad: FetchСontainingProcessedActions = {};
 
 				const fetch: Fetch = Component.fetch || {};
 				const fetchFresh: Fetch = Component.fetchFresh || {};
@@ -87,15 +98,15 @@ const hoc = ({ store }: IConfiguration) => {
 				// Set the required updates
 				Object.entries(fetchFresh).forEach(([key, rawAction]) => {
 					needLoad[key] = getCorrectAction(rawAction, {
-							ctx,
-							pageProps: pagePropsFromGetInitialProps,
+						ctx,
+						pageProps: pagePropsFromGetInitialProps,
 					});
 				});
 
 				if (Object.keys(needLoad).length > 0) {
 					try {
-						const response = await loader.get({ ctx, fetch: needLoad });
-						Object.assign(fetchResult, response);
+						const result = await handler.fulfillFetch({ ctx, fetch: needLoad });
+						Object.assign(fetchResult, result);
 					} catch (err) {
 						return { err: err.stack };
 					}
@@ -113,29 +124,77 @@ const hoc = ({ store }: IConfiguration) => {
 				};
 			}
 
-			constructor(props: WithPrepareConstructorProps) {
+			constructor(props) {
 				super(props);
 
 				if (props.err) {
-						return;
+					return;
 				}
 
-				const fetch: Fetch = Object.assign({}, props.Component.fetch, props.Component.fetchFresh);
+				const fetch: Fetch = { ...props.Component.fetch, ...props.Component.fetchFresh };
 
-				const initialResultPrepare = Object.keys(fetch).reduce((acc: object, key) => {
-					if (!props.pageProps[key]) {
+				const initialResultPrepare = Object
+					.keys(fetch)
+					.reduce((acc: object, key) => {
+						if (!props.pageProps[key]) {
 							// log warning
 							return acc;
-					}
+						}
 
-					return Object.assign(acc, { [key]: props.pageProps[key] });
-				}, {});
+						acc[key] = props.pageProps[key];
+
+						return acc;
+					}, {});
 
 				store.setInitialState(initialResultPrepare);
+
+				this.state = {
+					pageProps: props.pageProps,
+				};
+			}
+
+			componentDidMount() {
+				if (store.needToSubscribe) {
+					// If the repository is updated, then update the component.
+					store.subscribe(this.changeStore);
+				}
+				// Does not apply to a store that is one level higher, and the tree renders (redux)
+			}
+
+			componentWillUnmount() {
+				if (store.needToSubscribe) {
+					store.unsubscribe(this.changeStore);
+				}
+			}
+
+			changeStore = (newState: object) => {
+				const oldFetchData = {};
+				const newFetchData = {};
+				
+				Object
+					.keys({
+						...this.props.Component.fetch,
+						...this.props.Component.fetchFresh,
+					})
+					.forEach(key => {
+						oldFetchData[key] = this.state.pageProps[key];
+						newFetchData[key] = newState[key];
+					});
+				
+				if (JSON.stringify(oldFetchData) !== JSON.stringify(newFetchData)) {
+					this.setState({
+						pageProps: { ...this.state.pageProps, ...newFetchData },
+					});
+				}
 			}
 
 			render() {
-				return <BC {...this.props} />;
+				return (
+					<BC
+						{ ...this.props }
+						pageProps={ this.state.pageProps }
+					/>
+				);
 			}
 		};
 	};

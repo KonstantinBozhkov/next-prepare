@@ -1,8 +1,7 @@
 import * as React from 'react';
 
-import { Fetch } from '../../../common/interface';
-
-import { SimpleAction, ParallelAction } from '../../../common/__mocks__/actions';
+import { Fetch } from '../../interface';
+import { SimpleAction, ParallelAction } from '../../__mocks__/actions';
 
 export namespace PageWithFetchAndFetchFresh {
 	export class Component extends React.Component {

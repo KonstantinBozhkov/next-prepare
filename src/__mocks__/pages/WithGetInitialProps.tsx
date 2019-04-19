@@ -7,7 +7,7 @@ export namespace PageWithGetInitialProps {
 			return { foo: 'bar' };
 		}
 	
-		return() {
+		render() {
 			return JSON.stringify(this.props);
 		}
 	}

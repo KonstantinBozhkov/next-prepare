@@ -1,8 +1,11 @@
 import * as React from 'react';
 
-import { Fetch } from '../../../common/interface';
-
-import { SimpleAction, PassiveAction, ActionWithPayloadMiddleware } from '../../../common/__mocks__/actions';
+import { Fetch } from '../../interface';
+import {
+	SimpleAction,
+	PassiveAction,
+	ActionWithPayloadMiddleware,
+} from '../../__mocks__/actions';
 
 export namespace PageWithGetInitialPropsAndFetchAndFetchFresh {
 	export class Component extends React.Component {

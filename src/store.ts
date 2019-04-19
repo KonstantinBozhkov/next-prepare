@@ -1,4 +1,4 @@
-import { CustomStore } from '../common/interface';
+import { CustomStore } from './interface';
 
 class Store implements CustomStore {
 	private static instance: Store;
@@ -10,9 +10,15 @@ class Store implements CustomStore {
 	private state = {};
 	private middlewares = [];
 	private subscribers = [];
+	public needToSubscribe = true;
 
-	public subscribe = f => {
+	public subscribe = <S = any>(f: (state: S) => void): any => {
 		this.subscribers.push(f);
+		return this;
+	}
+	
+	public unsubscribe = <S = any>(f: (state: S) => void): any => {
+		this.subscribers = this.subscribers.filter(subscriber => subscriber !== f);
 		return this;
 	}
 
@@ -21,7 +27,7 @@ class Store implements CustomStore {
 		return this;
 	}
 
-	public setInitialState = (state: object) => {
+	public setInitialState = state => {
 		this.state = { ...state };
 		return this;
 	}

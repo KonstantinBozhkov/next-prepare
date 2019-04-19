@@ -21,11 +21,22 @@ const mockResultAfterMiddleware2 = {
 };
 
 describe('Test store', () => {
+	it('Сheck on the need for a subscription', () => {
+		expect(store.needToSubscribe).toBe(true);
+	});
+
 	it('Subscribe to updates', () => {
 		const result = store
 			.subscribe(subscribe1)
 			.subscribe(subscribe2)
 			.subscribe(subscribe3);
+
+		expect(result).toBe(store);
+	});
+
+	it('Unsubscribe', () => {
+		const result = store
+			.unsubscribe(subscribe2);
 
 		expect(result).toBe(store);
 	});
@@ -49,7 +60,7 @@ describe('Test store', () => {
 		expect(middleware2).toBeCalledWith(mockResultAfterMiddleware1);
 
 		expect(subscribe1).toBeCalledWith(mockResultAfterMiddleware2);
-		expect(subscribe2).toBeCalledWith(mockResultAfterMiddleware2);
+		expect(subscribe2).not.toBeCalled(); // Unsubscribed
 		expect(subscribe3).toBeCalledWith(mockResultAfterMiddleware2);
 	});
 
